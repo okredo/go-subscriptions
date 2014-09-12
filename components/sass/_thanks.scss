@@ -1,0 +1,63 @@
+.page .body .thanks {
+	h3 {
+		font-weight: 400;
+		margin-bottom: 1em;
+	}
+
+	.subtext {
+		@include subtext;
+		margin-top: -1em;
+	}
+
+	&.ok .button {
+		width: auto;
+	}
+}
+
+#thanks-actions {
+	margin-bottom: 60px;
+
+	@include min-screen( $large ) {
+		float: right;
+		width: 300px;
+	}
+}
+
+.thanks-block {
+	background: #f4f4ef;
+	border-radius: 3px;
+	margin-bottom: 10px;
+	padding: 10px;
+
+	p {
+		margin-bottom: 0;
+	}
+}
+
+.thanks-connect {
+	a {
+		font-size: 36px;
+		line-height: 36px;
+	}
+
+	p {
+		padding-right: 35px;
+	}
+}
+
+#thanks-video {
+	height: 442px;
+	position: relative;
+}
+
+.thanks-primary {
+	@include min-screen( $large ) {
+		float: left;
+		max-width: 590px;
+		width: 590px;
+	}
+}
+
+#subscribe .continue {
+	clear: left;
+}
