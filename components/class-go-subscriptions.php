@@ -278,6 +278,8 @@ class GO_Subscriptions
 	{
 		// the metakey is legacy and note that it uses all underscores
 		// instead of go-subscriptions_converted_meta
+		// @TODO: rename go_subscriptions_converted_meta to
+		// go-subscriptions_converted_meta
 		return get_user_meta( $user_id, 'go_subscriptions_converted_meta', TRUE );
 	}//end get_converted_meta
 
@@ -288,6 +290,8 @@ class GO_Subscriptions
 	{
 		// the metakey is legacy and note that it uses all underscores
 		// instead of go-subscriptions_converted_meta
+		// @TODO: rename go_subscriptions_converted_meta to
+		// go-subscriptions_converted_meta
 		return update_user_meta( $user_id, 'go_subscriptions_converted_meta', $converted_meta );
 	}//end update_converted_meta
 
