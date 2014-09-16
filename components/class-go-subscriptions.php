@@ -300,11 +300,12 @@ class GO_Subscriptions
 	 * our custom post types
 	 *
 	 * @param $all_caps array of capabilities they have (to be filtered)
+	 * @param $unused_meta_caps array of the required capabilities they need to have for a successful current_user_can
 	 * @param $args array [0] Requested capability
 	 *                    [1] User ID
  	 *                    [2] Associated object ID
 	 */
-	public function user_has_cap( $all_caps, $args )
+	public function user_has_cap( $all_caps, $unused_meta_caps, $args )
 	{
 		$cap = $args[0];
 
