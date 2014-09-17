@@ -4,7 +4,6 @@ class GO_Subscriptions
 {
 	public $config;
 	public $signin_url = '/subscription/sign-in/';
-	public $meta_key_prefix = 'go-subscriptions_';
 	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
 
@@ -275,22 +274,6 @@ class GO_Subscriptions
 			)
 		);
 	}//end wp_enqueue_scripts
-
-	/**
-	 * helper function for getting prefixed subscription meta
-	 */
-	public function get_subscription_meta( $user_id )
-	{
-		return get_user_meta( $user_id, $this->meta_key_prefix . 'subscription', TRUE );
-	}//end get_subscription_meta
-
-	/**
-	 * helper function for updating prefixed subscription meta
-	 */
-	public function update_subscription_meta( $user_id, $meta )
-	{
-		return update_user_meta( $user_id, $this->meta_key_prefix . 'subscription', $meta );
-	}//end update_subscription_meta
 
 	/**
 	 * helper function to get the converted meta
@@ -921,9 +904,6 @@ class GO_Subscriptions
 	 */
 	public function widgets_init()
 	{
-		require_once __DIR__ . '/class-go-subscriptions-widget.php';
-		register_widget( 'GO_Subscriptions_Widget' );
-
 		require_once __DIR__ . '/class-go-subscriptions-ribbon-widget.php';
 		register_widget( 'GO_Subscriptions_Ribbon_Widget' );
 	}//end widgets_init
