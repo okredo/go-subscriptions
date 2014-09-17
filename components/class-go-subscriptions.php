@@ -247,12 +247,33 @@ class GO_Subscriptions
 			$script_config['version'],
 			TRUE
 		);
+		wp_register_script(
+			'go-subscriptions-sign-up',
+			plugins_url( 'js/go-subscriptions-sign-up.js', __FILE__ ),
+			array( 'colorbox' ),
+			$script_config['version'],
+			TRUE
+		);
+
 		wp_register_style( 'colorbox', plugins_url( 'js/external/colorbox/colorbox.css', __FILE__ ), array(), $script_config['version'] );
 		wp_register_style( 'go-subscriptions', plugins_url( 'css/go-subscriptions.css', __FILE__ ), array(), $script_config['version'] );
 
-		wp_enqueue_script( 'colorbox' );
+		wp_enqueue_script( 'go-subscriptions-sign-up' );
+
 		wp_enqueue_style( 'colorbox' );
 		wp_enqueue_style( 'go-subscriptions' );
+
+		// check if we have an email-less user, which can exist if the user
+		// logged in with a social network account
+		$user = $this->get_user();
+		wp_localize_script(
+			'go-subscriptions-sign-up',
+			'go_subscriptions_settings',
+			array(
+				'user_has_email' => empty( $user['email'] ) ? 0 : 1,
+				'ajax_url' => site_url( '/wp-admin/admin-ajax.php' ),
+			)
+		);
 	}//end wp_enqueue_scripts
 
 	/**
