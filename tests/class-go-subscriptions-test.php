@@ -58,9 +58,8 @@ class GO_Subscriptions_Test extends WP_UnitTestCase
 
 		$this->assertTrue( FALSE !== $user );
 
-		$res = update_user_meta(
+		go_subscriptions()->update_converted_meta(
 			$user->ID,
-			'go_subscriptions_converted_meta',
 			array(
 				'converted_post_id' => 218186,
 				'converted_vertical' => 'mobile',
