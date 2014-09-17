@@ -23,7 +23,7 @@
 				has_email = go_subscriptions_settings.user_has_email;
 			}
 
-			if ( false === $(this).hasClass( 'nojs' ) && ( false == $('body').hasClass('logged-in') || false == has_email ) ) {
+			if ( false === $(this).hasClass( 'nojs' ) && ( false === $('body').hasClass('logged-in') || false === has_email ) ) {
 				e.preventDefault();
 				var redirect = $(this).data('redirect');
 				redirect = redirect ? '&redirect=' + encodeURIComponent( redirect ) : '';
@@ -36,10 +36,10 @@
 				var classes = $('body').attr('class').split(/\s+/);
 				$.each( classes, function( i, v ) {
 					var stuff = v.split(/-/);
-					if( 'postid' == stuff[0] ) {
+					if( 'postid' === stuff[0] ) {
 						converted_post_id = '&converted_post_id=' + stuff[1];
 					} // end if
-					if( 'vertical' == stuff[0] ) {
+					if( 'vertical' === stuff[0] ) {
 						// vertical names may contain dashes (-)
 						stuff.shift();
 						converted_vertical = '&converted_vertical=' + stuff.join( '-' );
@@ -72,17 +72,17 @@
 						// from: http://kamikazemusic.com/quick-tips/jquery-html5-placeholder-fix/
 						if( Modernizr && ! Modernizr.input.placeholder ) {
 							$('input').each( function() {
-								if( $(this).val() == '' && $(this).attr('placeholder') != '' ) {
+								if( $(this).val() === '' && $(this).attr('placeholder') !== '' ) {
 									$(this).val( $(this).attr('placeholder') );
 
 									$(this).focus(function() {
-										if( $(this).val() == $(this).attr('placeholder') ) {
+										if( $(this).val() === $(this).attr('placeholder') ) {
 											$(this).val('');
 										}
 									});
 
 									$(this).blur( function() {
-										if( $(this).val() == '' ) {
+										if( $(this).val() === '' ) {
 											$(this).val($(this).attr('placeholder'));
 										}
 									});
@@ -102,7 +102,7 @@
 		});
 
 		// Display the signup lightbox if the #go-subscriptions-signup hash is present
-		if ( '#go-subscriptions-signup' == window.location.hash ) {
+		if ( '#go-subscriptions-signup' === window.location.hash ) {
 			$( '.go-subscriptions-signup-button .button, .go-subscriptions-signup-link' ).trigger( 'click' );
 		} // END if
 
