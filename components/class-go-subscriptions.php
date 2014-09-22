@@ -28,7 +28,7 @@ class GO_Subscriptions
 		$this->config = apply_filters( 'go_config', $config, 'go-subscriptions' );
 		if ( empty( $this->config ) )
 		{
-			apply_filters( 'go_slog', 'go-subscriptions', 'Unable to load go-subscriptions config file. Aborting.' );
+			do_action( 'go_slog', 'go-subscriptions', 'Unable to load go-subscriptions config file. Aborting.' );
 			return;
 		}
 
@@ -162,7 +162,7 @@ class GO_Subscriptions
 		$this->update_converted( $user_arr['ID'], $converted_data );
 
 
-		apply_filters( 'go_slog', 'subscriptions-create_guest_user', 'Created guest user', $user_arr );
+		do_action( 'go_slog', 'subscriptions-create_guest_user', 'Created guest user', $user_arr );
 
 		do_action( 'go_subscriptions_new_subscriber', get_user_by( 'id', $user_arr['ID'] ) );
 
@@ -490,7 +490,7 @@ class GO_Subscriptions
 
 		if ( ! $user )
 		{
-			apply_filters( 'go_slog', 'subscriptions-user_register_error', 'failed to load new user', $user_id );
+			do_action( 'go_slog', 'subscriptions-user_register_error', 'failed to load new user', $user_id );
 			return;
 		}
 
