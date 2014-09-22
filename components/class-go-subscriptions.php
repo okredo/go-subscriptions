@@ -234,12 +234,11 @@ class GO_Subscriptions
 
 		// bail if the post isn't valid or isn't published
 		if (
-			! $post = get_post( $post_id )
+			( ! $post = get_post( $post_id ) )
 			||
 			(
 				'publish' != $post->post_status &&
-				! ( 'inherit' == $post->post_status && 'go-report-section' == $post->post_type
-				)
+				! ( 'inherit' == $post->post_status && 'go-report-section' == $post->post_type )
 			)
 		)
 		{
