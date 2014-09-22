@@ -4,11 +4,7 @@ class GO_Subscriptions
 {
 	public $config;
 	public $signin_url = '/subscription/sign-in/';
-	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
-
-	private $signup_form_fill = array();
-	private $registered_pages = array();
 
 	// custom post types we need to filter user caps for
 	private $protected_post_types = array(
@@ -17,7 +13,6 @@ class GO_Subscriptions
 		'quarterly-wrap-up', // old report type
 		'sector-roadmap',    // old report type
 	);
-
 	private $filters = array(
 		'read_post',
 		'comment',
@@ -31,8 +26,9 @@ class GO_Subscriptions
 	public function __construct( $config = false )
 	{
 		$this->config = apply_filters( 'go_config', $config, 'go-subscriptions' );
-		if ( ! $this->config || empty( $this->config ) )
+		if ( empty( $this->config ) )
 		{
+			apply_filters( 'go_slog', 'go-subscriptions', 'Unable to load go-subscriptions config file. Aborting.' );
 			return;
 		}
 
@@ -44,27 +40,16 @@ class GO_Subscriptions
 		// add custom roles
 		add_filter( 'go_roles', array( $this, 'go_roles' ) );
 
-		// capture a few URLs to redirect to the homepage
-		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
-
-		add_action( 'widgets_init', array( $this, 'widgets_init' ) );
-
-		if ( is_admin() )
+		if ( ! is_admin() )
 		{
-			add_action( 'wp_ajax_go-subscriptions-signup-form', array( $this, 'ajax_signup_form' ) );
-			add_action( 'wp_ajax_nopriv_go-subscriptions-signup-form', array( $this, 'ajax_signup_form' ) );
-		}
-		else
-		{
-			add_shortcode( 'go_subscriptions_signup_form', array( $this, 'signup_form' ) );
 			add_shortcode( 'go_subscriptions_thankyou', array( $this, 'get_thankyou' ) );
 
 			add_action( 'init', array( $this, 'init' ) );
-		}// end else
+		}// end if
 
 		// on any other blog, we do not want/need the rest of this plugin's
 		// functionality
-		if ( 'pro' != go_config()->get_property_slug() && 'accounts' != go_config()->get_property_slug() )
+		if ( 'accounts' != go_config()->get_property_slug() )
 		{
 			return;
 		}
@@ -73,6 +58,7 @@ class GO_Subscriptions
 
 		if ( ! is_admin() )
 		{
+			//@TODO: check if we're still using this shortcode or not
 			add_shortcode( 'go_subscriptions_signup_button', array( $this, 'signup_button' ) );
 			add_action( 'wp_update_comment_count', array( $this, 'update_comment_count' ), 11, 2 );
 		}//end if
@@ -85,25 +71,9 @@ class GO_Subscriptions
 	 */
 	public function init()
 	{
-		if ( 'POST' == $_SERVER['REQUEST_METHOD'] )
-		{
-			$this->handle_post();
-		}
-
 		// doing this here rather than on the wp_enqueue_scripts hook so that it is done before pre_get_posts
 		$this->wp_enqueue_scripts();
 	}//end init
-
-	/**
-	 * Keeping form post handling segregated
-	 */
-	public function handle_post()
-	{
-		if ( isset( $_POST['form_id'] ) && $_POST['form_id'] == $this->signup_form_id )
-		{
-			$this->process_signup_form();
-		}
-	}//end handle_post
 
 	/**
 	 * hooked to the plugins_loaded action to redirect certain URLs to the login page
@@ -126,39 +96,6 @@ class GO_Subscriptions
 			exit;
 		}// end if
 	}//end plugins_loaded
-
-	/**
-	 * embeddable signup form
-	 */
-	public function ajax_signup_form()
-	{
-		nocache_headers();
-
-		$atts = array();
-
-		if ( isset( $_REQUEST['referring_url'] ) )
-		{
-			$atts['referring_url'] = $_REQUEST['referring_url'];
-		}
-
-		if ( isset( $_REQUEST['converted_post_id'] ) )
-		{
-			$atts['converted_post_id'] = absint( $_REQUEST['converted_post_id'] );
-		}
-
-		if ( isset( $_REQUEST['converted_vertical'] ) )
-		{
-			$atts['converted_vertical'] = sanitize_title_with_dashes( $_REQUEST['converted_vertical'] );
-		}
-
-		if ( isset( $_REQUEST['redirect'] ) )
-		{
-			$atts['redirect'] = $_REQUEST['redirect'];
-		}
-
-		echo $this->signup_form( $atts );
-		die;
-	}//end ajax_signup_form
 
 	/**
 	 * Creates a guest user if a user does not already exist with given email
@@ -239,40 +176,9 @@ class GO_Subscriptions
 	{
 		$script_config = apply_filters( 'go_config', array( 'version' => 1 ), 'go-script-version' );
 
-		wp_register_script(
-			'colorbox',
-			plugins_url( 'js/external/colorbox/jquery.colorbox.js', __FILE__ ),
-			array( 'jquery' ),
-			$script_config['version'],
-			TRUE
-		);
-		wp_register_script(
-			'go-subscriptions-sign-up',
-			plugins_url( 'js/go-subscriptions-sign-up.js', __FILE__ ),
-			array( 'colorbox' ),
-			$script_config['version'],
-			TRUE
-		);
-
-		wp_register_style( 'colorbox', plugins_url( 'js/external/colorbox/colorbox.css', __FILE__ ), array(), $script_config['version'] );
 		wp_register_style( 'go-subscriptions', plugins_url( 'css/go-subscriptions.css', __FILE__ ), array(), $script_config['version'] );
 
-		wp_enqueue_script( 'go-subscriptions-sign-up' );
-
-		wp_enqueue_style( 'colorbox' );
 		wp_enqueue_style( 'go-subscriptions' );
-
-		// check if we have an email-less user, which can exist if the user
-		// logged in with a social network account
-		$user = $this->get_user();
-		wp_localize_script(
-			'go-subscriptions-sign-up',
-			'go_subscriptions_settings',
-			array(
-				'user_has_email' => empty( $user['email'] ) ? 0 : 1,
-				'ajax_url' => site_url( '/wp-admin/admin-ajax.php' ),
-			)
-		);
 	}//end wp_enqueue_scripts
 
 	/**
@@ -446,6 +352,7 @@ class GO_Subscriptions
 
 	/**
 	 * get a signup button
+	 * @TODO: check if we can remove this function
 	 */
 	public function signup_button( $args )
 	{
@@ -458,49 +365,6 @@ class GO_Subscriptions
 
 		return $this->get_template_part( 'signup-button.php', $args );
 	}//end signup_button
-
-	/**
-	 * Get the first form in the 2-step process
-	 */
-	public function signup_form( $atts = array() )
-	{
-		$arr = array_merge( $this->signup_form_fill, is_array( $atts ) ? $atts : array() );
-
-		// setup default values
-		$default_arr = array(
-			'company'            => '',
-			'converted_post_id'  => get_the_ID(),
-			'email'              => '',
-			'redirect'           => $this->config['signup_path'],
-			'title'              => '',
-			'converted_vertical' => array_shift(
-				wp_get_object_terms(
-					get_the_ID(),
-					$this->config['section_taxonomy'],
-					array(
-						'orderby' => 'count',
-						'order' => 'DESC',
-						'fields' => 'slugs',
-					)
-				)
-			),
-		);
-
-		// we'll take only non-empty values from $arr. rest will be filled
-		// with values from $dafault_arr
-		$arr = array_merge( $default_arr, array_filter( $arr ) );
-
-		// override the defaults with _REQUEST if available
-		foreach ( $arr as $k => $v )
-		{
-			$arr[ $k ] = isset( $_REQUEST[ $k ] ) ? $_REQUEST[ $k ] : $v;
-		}// end foreach
-
-		// this will let our post handler know if the post came from this form
-		$arr['form_id'] = $this->signup_form_id;
-
-		return $this->get_template_part( 'signup-form.php', $arr );
-	}//end signup_form
 
 	/**
 	 * Get the final "thank you" page in the subscription process
@@ -614,64 +478,6 @@ class GO_Subscriptions
 
 		return $message;
 	}//end login_message
-
-	/**
-	 * process signup form submissions (after step 1 signup)
-	 */
-	private function process_signup_form()
-	{
-		if ( ! check_admin_referer( 'go_subscriptions_signup' ) )
-		{
-			wp_redirect( $this->config['signup_path'] );
-			die;
-		}
-		else
-		{
-			$return = $this->create_guest_user( $_POST );
-		}
-
-		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
-		{
-			// if this is a wijax request, let's redirect to the page we are already on
-			$redirect_url = home_url( $_SERVER['REQUEST_URI'] );
-		}
-		else
-		{
-			$redirect_url = isset( $_POST['redirect'] ) ? wp_validate_redirect( $_POST['redirect'], $this->config['subscription_path'] ) : $this->config['subscription_path'];
-		}
-
-		if ( is_wp_error( $return ) )
-		{
-			if ( 'email-exists' == $return->get_error_code() )
-			{
-				// we are OK to redirect to the CC capture, the user has an account
-				$user = $return->get_error_data( 'email-exists' );
-
-				// if the user already has an account and an active subscription, redirect to the login page
-				if ( $user->ID && $user->has_cap( 'sub_state_active' ) )
-				{
-					wp_redirect( $this->signin_url . '?action=lostpassword&has_subscription' );
-					exit;
-				}
-
-				$redirect_url = add_query_arg( array( 'email' => urlencode( $user->user_email ) ), $redirect_url );
-			}//end if
-			else
-			{
-				$this->signup_form_fill = $return->get_error_data();
-				$this->signup_form_fill['error'] = $return->get_error_message();
-				return;
-			}//end else
-		}//end if
-		else
-		{
-			// there were no errors, the user is created, log them in.
-			$this->login_user( $return );
-		}
-
-		wp_redirect( $redirect_url );
-		exit;
-	}//end process_signup_form
 
 	/**
 	 * Send the welcome email, assumed template is configured in Mandrill
@@ -898,15 +704,6 @@ class GO_Subscriptions
 
 		return $user_arr;
 	}//end validate_clean_user
-
-	/**
-	 * Initialize the widget
-	 */
-	public function widgets_init()
-	{
-		require_once __DIR__ . '/class-go-subscriptions-ribbon-widget.php';
-		register_widget( 'GO_Subscriptions_Ribbon_Widget' );
-	}//end widgets_init
 
 	/**
 	 * hooked to the site_option_welcome_user_email filter to alter the welcome email
