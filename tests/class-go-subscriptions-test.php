@@ -50,11 +50,13 @@ class GO_Subscriptions_Test extends WP_UnitTestCase
 	 */
 	public function test_get_converted_url()
 	{
-		$user = $this->create_user( array(
-										'user_nicename' => 'pacman',
-										'user_login' => 'pacman',
-										'user_email' => 'pacman_testtest@gigaom.com',
-		) );
+		$user = $this->create_user(
+			array(
+				'user_nicename' => 'pacman',
+				'user_login' => 'pacman',
+				'user_email' => 'pacman_testtest@gigaom.com',
+			)
+		);
 
 		$this->assertTrue( FALSE !== $user );
 

@@ -3,11 +3,8 @@
 class GO_Subscriptions
 {
 	public $config;
-	public $signin_url = '/subscription/sign-in/';
 	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
-
-	private $signup_form_fill = array();
 
 	// custom post types we need to filter user caps for
 	private $protected_post_types = array(
@@ -78,7 +75,7 @@ class GO_Subscriptions
 
 		// on any other blog, we do not want/need the rest of this plugin's
 		// functionality
-		if ( 'accounts' != go_config()->get_property_slug() )
+		if ( $this->config['accounts_blog_id'] != get_current_blog_id() )
 		{
 			return;
 		}
@@ -111,19 +108,16 @@ class GO_Subscriptions
 	 */
 	public function plugins_loaded()
 	{
-		$relative_signin_url = $this->signin_url;
-
-		// make this URL absolute, and point at the main site
-		$this->signin_url = network_site_url( $this->signin_url, 'https' );
-
 		// redirect all these variations to the login url
-		if ( in_array( $_SERVER['REQUEST_URI'], array( '/subscription', '/subscription/', '/register', 'register/' ) )
-			|| ( $relative_signin_url == $_SERVER['REQUEST_URI'] && ! is_main_site() )
-			)
+		if (
+			in_array( $_SERVER['REQUEST_URI'],
+					  array( '/subscription', '/subscription/', '/register', 'register/' ) )
+			|| ( $this->config['signin_path'] == $_SERVER['REQUEST_URI'] && ! is_main_site() )
+		)
 		{
-			wp_redirect( $this->signin_url );
+			wp_redirect( $this->config['signin_url'] );
 			exit;
-		}// end if
+		}
 	}//end plugins_loaded
 
 	/**
@@ -163,7 +157,7 @@ class GO_Subscriptions
 			{
 				$atts['go-subscriptions']['error'] = $get_vars['error'];
 			}
-		}
+		}//end if
 
 		echo $this->signup_form( $atts );
 		die;
@@ -174,7 +168,7 @@ class GO_Subscriptions
 	 */
 	public function signup_form( $atts = array() )
 	{
-		$arr = array_merge( $this->signup_form_fill, is_array( $atts ) && isset( $atts['go-subscriptions'] ) ? $atts['go-subscriptions'] : array() );
+		$arr = ( is_array( $atts ) && isset( $atts['go-subscriptions'] ) ) ? $atts['go-subscriptions'] : array();
 
 		// setup default values
 		$default_arr = array(
@@ -324,7 +318,7 @@ class GO_Subscriptions
 				if ( $user->ID && $user->has_cap( 'sub_state_active' ) )
 				{
 					$result['error'] = 'Email already linked to a subscription';
-					$result['redirect_url'] = $this->signin_url . '?action=lostpassword&has_subscription';
+					$result['redirect_url'] = $this->config['signin_url'] . '?action=lostpassword&has_subscription';
 					return $result;
 				}//end if
 
@@ -332,8 +326,6 @@ class GO_Subscriptions
 			}//end if
 			else
 			{
-//				$this->signup_form_fill = $return->get_error_data();
-//				$this->signup_form_fill['error'] = $return->get_error_message();
 				$result['redirect_url'] = $this->config['signup_path'];
 				$result['error'] = urlencode( $return->get_error_message() );
 			}//end else
@@ -356,7 +348,7 @@ class GO_Subscriptions
 		}//end else
 
 		return $result;
-	}//end ajax_process_signup_form
+	}//end get_signup_redirect_url
 
 	/**
 	 * the handler for "go_subscriptions_subscription_form" shortcode.
@@ -666,15 +658,6 @@ class GO_Subscriptions
 
 		$atts = shortcode_atts( array(), $atts );
 
-		$messages = array(
-			'Just 1up\'d my knowledge by subscribing to @GigaomPro',
-			'Just Level Up\'d my knowledge by subscribing to @GigaomPro',
-			'Bigger, Better, Faster! Now rockin\' a subscription to @GigaomPro',
-			'Feeling smarter already with a subscription to @GigaomPro',
-			'Just invested in my career with a subscription to @GigaomPro',
-		);
-		$atts['message'] = $messages[ array_rand( $messages ) ];
-
 		wp_enqueue_style( 'thanks' );
 
 		// do shortcode makes sure that any shortcodes that are in the template get parsed.
@@ -695,45 +678,6 @@ class GO_Subscriptions
 		include( __DIR__ . '/templates/' . $template_name );
 		return ob_get_clean();
 	}//end get_template_part
-
-	/**
-	 * get an array of user attributes
-	 *
-	 * @param $id int WordPress user id
-	 * @return array of attributes
-	 */
-	public function get_user( $id = FALSE )
-	{
-		$user = array();
-
-		if ( is_numeric( $id ) )
-		{
-			$current_user = get_user_by( 'id', $id );
-		}
-		else
-		{
-			$current_user = wp_get_current_user();
-		}
-
-		if ( ! ( $current_user instanceof WP_User ) || $current_user->ID == 0 )
-		{
-			return FALSE;
-		}
-
-		$user['obj'] = $current_user;
-
-		$user['id'] = $current_user->ID;
-		$user['email'] = $current_user->user_email;
-		$user['first_name'] = $current_user->user_firstname;
-		$user['last_name'] = $current_user->user_lastname;
-
-		$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $user['id'] );
-
-		$user['company'] = isset( $profile_data['company'] ) ? $profile_data['company'] : '';
-		$user['title'] = isset( $profile_data['title'] ) ? $profile_data['title'] : '';
-
-		return $user;
-	}//end get_user
 
 	/**
 	 * log a given user id in
@@ -774,7 +718,7 @@ class GO_Subscriptions
 	 */
 	public function send_welcome_email( $user_id, $subscription )
 	{
-		$user = $this->get_user( $user_id );
+		$user = get_user_by( 'id', $user_id );
 
 		if ( ! $user )
 		{
@@ -787,13 +731,11 @@ class GO_Subscriptions
 		// note: wp_set_password will clear the user cache and result in the current logged in user being logged out.
 		wp_set_password( $password, $user_id );
 
-		$message = '<placeholder>';	// whatever you place here will be replaced by mandrill
-
 		switch_to_blog( $this->config['subscriptions_blog_id'] ); // make sure our urls go to research
 
 		$args = array(
 			'SITE_URL' => network_site_url(),
-			'SIGNIN_URL' => $this->signin_url,
+			'SIGNIN_URL' => $this->config['signin_url'],
 			'TEMPLATE_URL' => get_template_directory_uri(),
 			'STYLESHEET_URL' => preg_replace( '/^https:/', 'http:', get_stylesheet_directory_uri() ),
 			'DATE_YEAR' => date( 'Y' ),
@@ -823,14 +765,30 @@ class GO_Subscriptions
 			$email_template .= '-trial';
 		}
 
-		$headers = array();
-		$headers[] = 'Content-Type: text/html';
-		$headers[] = 'From: research-support@gigaom.com';
-		$headers[] = 'Bcc: pro@gigaom.com';
-		$headers[] = 'X-MC-Template: ' . $email_template;
-		$headers[] = 'X-MC-MergeVars: ' . json_encode( $args );
+		// build the email params for the go-subscriptions-welcome-email filter
+		$email_args = array(
+			'to' => $user->email,
+			'subject' => 'Welcome!',
+			'headers' => array(),
+			'content' => '<placeholder>', // to be filled in my Mandrill
+		);
 
-		wp_mail( $user['email'], 'Welcome to Gigaom Research!', $message, $headers );
+		$email_args['headers']['Content-Type']   = 'text/html';
+		$email_args['headers']['X-MC-Template']  = $email_template;
+		$email_args['headers']['X-MC-MergeVars'] = json_encode( $args );
+		$email_args['headers']['From'] = 'your_email@he.re';
+
+		// From and possibly Bcc and/or Cc to be filled by the filter call
+		$email_args = apply_filters( 'go_subscriptions_welcome_email', $email_args, $user );
+
+		// convert the headers to a format usable by wp_mail
+		$headers = array();
+		foreach ( $email_args['headers'] as $key => $val )
+		{
+			$headers[] = $key . ': ' . $val;
+		}
+
+		wp_mail( $email_args['to'], $email_args['subject'], $email_args['content'], $headers );
 	}//end send_welcome_email
 
 	/**
@@ -997,22 +955,7 @@ class GO_Subscriptions
 	 */
 	public function site_option_welcome_user_email( $text )
 	{
-		// the formatting of these $text lines are like this so there isn't weird tabbing
-		// in the email
-		$text = __( 'Dear User,
-
-Your new Gigaom Research account is set up. You can log in with the following information:
-
-Username: USERNAME
-Password: PASSWORD
-LOGINLINK
-
-Questions? We\'ve got FAQs: http://research.gigaom.com/about/
-
-Thanks!
-
---The Team @ Gigaom Research' );
-		return $text;
+		return $this->config['welcome_user_email_text'];
 	}//end site_option_welcome_user_email
 }//end class
 
