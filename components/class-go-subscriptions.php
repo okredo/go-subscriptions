@@ -203,13 +203,17 @@ class GO_Subscriptions
 		// override the defaults with _REQUEST if available
 		foreach ( $arr as $k => $v )
 		{
-			$arr[ $k ] = isset( $_REQUEST[ $k ] ) ? $_REQUEST[ $k ] : $v;
+			$arr[ $k ] = isset( $_REQUEST['go-subscriptions'][ $k ] ) ? $_REQUEST['go-subscriptions'][ $k ] : $v;
 		}// end foreach
 
 		// this will let our post handler know if the post came from this form
 		$arr['form_id'] = $this->signup_form_id;
 
-		$arr['ajax_url'] = site_url( '/wp-admin/admin-ajax.php', 'https' );
+		// it's important to make sure this admin ajax url will be executed
+		// on Accounts, else we create users with unexpected roles on
+		// other blogs (e.g. 'subscriber' may be the default role on
+		// Research, which we definitely do not want).
+		$arr['ajax_url'] = get_admin_url( $this->config['accounts_blog_id'], '/admin-ajax.php', 'https' );
 
 		return $this->get_template_part( 'signup-form.php', $arr );
 	}//end signup_form
@@ -220,12 +224,10 @@ class GO_Subscriptions
 	public function ajax_signup()
 	{
 		$result = $this->get_signup_redirect_url( $this->config['signup_path'] );
-golog( 'yo!' );
 
 		$post_vars['go-subscriptions'] = array_intersect_key( $result['post_vars'], $this->signup_form_keys );
 
 		$result['redirect_url'] = apply_filters( 'go_subscriptions_signup', $result['redirect_url'], $result['user'], $post_vars );
-golog( 'after applying filter, redirect url is ' . $result['redirect_url'] );
 
 		if ( ! empty( $result['error'] ) )
 		{
@@ -237,8 +239,6 @@ golog( 'after applying filter, redirect url is ' . $result['redirect_url'] );
 			$post_vars['go-subscriptions'][ $key ] = urlencode( $val );
 		}
 
-golog( $result );
-golog( $post_vars );
 		wp_redirect( add_query_arg( $post_vars, $result['redirect_url'] ) );
 		die;
 	}//end ajax_signup
@@ -359,117 +359,30 @@ golog( $post_vars );
 	}//end ajax_process_signup_form
 
 	/**
-	 * the handler for "go_subscriptions_subscription_form" shortcode. this
-	 * is what the step-1 signup form posts to.
+	 * the handler for "go_subscriptions_subscription_form" shortcode.
 	 *
+	 * @TODO verify that we don't actually get these params
 	 * @param array $user a user array whose 'obj' element is a WP_User object
 	 * @param array $atts attributes needed by the form
-	 * @return mixed FALSE if we're not ready for the 2nd step form yet
+	 * @return string the subscription form
 	 */
 	public function subscription_form( $user, $atts )
 	{
-golog( 'yo!' );
-$cap = user_can( $user, 'subscriber' );
-golog( var_export( $cap, 1 ) );
+		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
 
-		$user = $this->get_user();
-		if ( empty( $user['email'] ) )
-		{
-			// the user is loading the 2nd step form prematurely. return the
-			// step-1 form
-			// @TODO: fix this dependency somehow
-			return $this->signup_form( $_GET );
-		}
-
-golog( 'continuing...' );
-return '<h1>call an action to let go-recurly fill out the step-2 form</h1>';
-
-
-
-		// test cc #'s:
-		// 4111-1111-1111-1111  -  will succeed
-		// 4000-0000-0000-0002  - will be declined
-		$sc_atts = shortcode_atts(
-			array(
-				'plan_code' => $this->config['default_recurly_plan_code'],
-				'terms_url' => $this->config['tos_url'],
-				'thankyou_path' => $this->config['thankyou_path'],
-				'support_email' => $this->config['support_email'],
-			),
-			$atts
-		);
-
-		$user = go_subscriptions()->get_user();
+		$user = wp_get_current_user();
 
 		if (
-			isset( $_GET['plan_code'] ) &&
-			$_GET['plan_code'] != $this->config['default_recurly_plan_code']
+			0 >= $user->ID ||
+			empty( $user->user_email ) ||
+			! user_can( $user, 'subscriber' )
 		)
 		{
-			// if a plan code is passed in that doesn't match the default plan code, use that
-			$sc_atts['plan_code'] = trim( $_GET['plan_code'] );
-		}
-		else
-		{
-			// otherwise, use the default (and adjust based on previous trial)
-			if ( $user && $user['obj']->has_cap( 'did_trial' ) )
-			{
-				// this strips off any trailing "-7daytrial" in plan code
-				list( $sc_atts['plan_code'] ) = explode( '-', $sc_atts['plan_code'] );
-			}
-		}//end else
-
-		if ( ! $user && isset( $_GET['email'] ) && is_email( $_GET['email'] ) )
-		{
-			// we will load the object so that we can see if they already have a recurly account code
-			$user = array(
-				'email' => $_GET['email'],
-				'obj' => get_user_by( 'email', $_GET['email'] ),
-			);
-		}//end if
-
-		$this->recurly_client();
-
-		$account_code = $this->get_or_create_account_code( $user['obj'] );
-
-		if ( empty( $account_code ) || empty( $user['email'] ) )
-		{
-			// the user is loading the 2nd step form prematurely. return the
-			// form for step 1
-			// @TODO: fix this dependency somehow
-			return go_local_subscriptions()->signup_form( $atts );
+			// we don't have a user yet
+			$form = $this->signup_form( $_GET );
 		}
 
-		$signature = $this->sign_subscription( $account_code, $sc_atts['plan_code'] );
-		$coupon    = $_COOKIE['go_subscription_coupon'] ?: '';
-
-		wp_localize_script( 'go-recurly', 'go_recurly', array(
-			'account' => array(
-				'firstName'   => $user['first_name'],
-				'lastName'    => $user['last_name'],
-				'email'       => $user['email'],
-				'companyName' => $user['company'],
-			),
-			'billing' => array(
-				'firstName' => $user['first_name'],
-				'lastName'  => $user['last_name'],
-			),
-			'subscription' => array(
-				'couponCode' => $coupon,
-			),
-			'tos_url' => $this->config['tos_url'],
-			'privacy_policy_url' => $this->config['privacy_policy_url'],
-		) );
-
-		$args = array(
-			'signature' => $signature,
-			'url'       => wp_validate_redirect( $sc_atts['thankyou_path'], $this->config['thankyou_path'] ),
-			'plan_code' => $sc_atts['plan_code'],
-			'terms_url' => $sc_atts['terms_url'],
-			'support_email' => $sc_atts['support_email'],
-		);
-
-		return $this->get_template_part( 'subscription-form.php', $args );
+		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID );
 	}//end subscription_form
 
 	/**
