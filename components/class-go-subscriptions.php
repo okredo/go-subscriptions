@@ -4,7 +4,10 @@ class GO_Subscriptions
 {
 	public $config;
 	public $signin_url = '/subscription/sign-in/';
+	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
+
+	private $signup_form_fill = array();
 
 	// custom post types we need to filter user caps for
 	private $protected_post_types = array(
@@ -16,6 +19,17 @@ class GO_Subscriptions
 	private $filters = array(
 		'read_post',
 		'comment',
+	);
+
+	// accepted query vars for the signup form
+	private $signup_form_keys = array(
+		'company'            => 1,
+		'converted_post_id'  => 1,
+		'converted_vertical' => 1,
+		'email'              => 1,
+		'error'              => 1,
+		'redirect'           => 1,
+		'title'              => 1,
 	);
 
 	/**
@@ -32,6 +46,9 @@ class GO_Subscriptions
 			return;
 		}
 
+		// capture a few URLs to redirect to the homepage
+		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
+
 		// filter for caps for additional post types. we want this to run
 		// after the default priority, after the baseline subscription-related
 		// caps are filtered
@@ -40,12 +57,24 @@ class GO_Subscriptions
 		// add custom roles
 		add_filter( 'go_roles', array( $this, 'go_roles' ) );
 
-		if ( ! is_admin() )
+		if ( is_admin() )
 		{
+			add_action( 'wp_ajax_go-subscriptions-signup-form', array( $this, 'ajax_signup_form' ) );
+			add_action( 'wp_ajax_nopriv_go-subscriptions-signup-form', array( $this, 'ajax_signup_form' ) );
+			add_action( 'wp_ajax_go-subscriptions-signup', array( $this, 'ajax_signup' ) );
+			add_action( 'wp_ajax_nopriv_go-subscriptions-signup', array( $this, 'ajax_signup' ) );
+		}
+		else
+		{
+			//@TODO verify that this is still being used.
+			add_shortcode( 'go_subscriptions_signup_form', array( $this, 'signup_form' ) );
+
+			// this is mapped to the "/subscription/sign-up/" permalink
+			add_shortcode( 'go_subscriptions_subscription_form', array( $this, 'subscription_form' ) );
 			add_shortcode( 'go_subscriptions_thankyou', array( $this, 'get_thankyou' ) );
 
 			add_action( 'init', array( $this, 'init' ) );
-		}// end if
+		}// end else
 
 		// on any other blog, we do not want/need the rest of this plugin's
 		// functionality
@@ -96,6 +125,265 @@ class GO_Subscriptions
 			exit;
 		}// end if
 	}//end plugins_loaded
+
+	/**
+	 * embeddable signup form
+	 */
+	public function ajax_signup_form()
+	{
+		nocache_headers();
+
+		$atts = array( 'go-subscriptions' => array() );
+
+		if ( isset( $_GET['go-subscriptions'] ) )
+		{
+			$get_vars = $_GET['go-subscriptions'];
+
+			if ( isset( $get_vars['referring_url'] ) )
+			{
+				$atts['go-subscriptions']['referring_url'] = $get_vars['referring_url'];
+			}
+
+			if ( isset( $get_vars['converted_post_id'] ) )
+			{
+				$atts['go-subscriptions']['converted_post_id'] = absint( $get_vars['converted_post_id'] );
+			}
+
+			if ( isset( $get_vars['converted_vertical'] ) )
+			{
+				$atts['go-subscriptions']['converted_vertical'] = sanitize_title_with_dashes( $get_vars['converted_vertical'] );
+			}
+
+			if ( isset( $get_vars['redirect'] ) )
+			{
+				$atts['go-subscriptions']['redirect'] = $get_vars['redirect'];
+			}
+
+			if ( isset( $get_vars['error'] ) )
+			{
+				$atts['go-subscriptions']['error'] = $get_vars['error'];
+			}
+		}
+
+		echo $this->signup_form( $atts );
+		die;
+	}//end ajax_signup_form
+
+	/**
+	 * Get the first form in the 2-step process
+	 */
+	public function signup_form( $atts = array() )
+	{
+		$arr = array_merge( $this->signup_form_fill, is_array( $atts ) && isset( $atts['go-subscriptions'] ) ? $atts['go-subscriptions'] : array() );
+
+		// setup default values
+		$default_arr = array(
+			'company'            => '',
+			'converted_post_id'  => get_the_ID(),
+			'email'              => '',
+			'redirect'           => $this->config['signup_path'],
+			'title'              => '',
+			'converted_vertical' => array_shift(
+				wp_get_object_terms(
+					get_the_ID(),
+					$this->config['section_taxonomy'],
+					array(
+						'orderby' => 'count',
+						'order' => 'DESC',
+						'fields' => 'slugs',
+					)
+				)
+			),
+		);
+
+		// we'll take only non-empty values from $arr. rest will be filled
+		// with values from $dafault_arr
+		$arr = array_merge( $default_arr, array_filter( $arr ) );
+
+		// override the defaults with _REQUEST if available
+		foreach ( $arr as $k => $v )
+		{
+			$arr[ $k ] = isset( $_REQUEST['go-subscriptions'][ $k ] ) ? $_REQUEST['go-subscriptions'][ $k ] : $v;
+		}// end foreach
+
+		// this will let our post handler know if the post came from this form
+		$arr['form_id'] = $this->signup_form_id;
+
+		// it's important to make sure this admin ajax url will be executed
+		// on Accounts, else we create users with unexpected roles on
+		// other blogs (e.g. 'subscriber' may be the default role on
+		// Research, which we definitely do not want).
+		$arr['ajax_url'] = get_admin_url( $this->config['accounts_blog_id'], '/admin-ajax.php', 'https' );
+
+		return $this->get_template_part( 'signup-form.php', $arr );
+	}//end signup_form
+
+	/**
+	 * process data submited from the step-1 sign-up form
+	 */
+	public function ajax_signup()
+	{
+		$result = $this->get_signup_redirect_url( $this->config['signup_path'] );
+
+		$post_vars['go-subscriptions'] = array_intersect_key( $result['post_vars'], $this->signup_form_keys );
+
+		$result['redirect_url'] = apply_filters( 'go_subscriptions_signup', $result['redirect_url'], $result['user'], $post_vars );
+
+		if ( ! empty( $result['error'] ) )
+		{
+			$post_vars['go-subscriptions']['error'] = $result['error'];
+		}
+
+		foreach ( $post_vars['go-subscriptions'] as $key => $val )
+		{
+			$post_vars['go-subscriptions'][ $key ] = urlencode( $val );
+		}
+
+		wp_redirect( add_query_arg( $post_vars, $result['redirect_url'] ) );
+		die;
+	}//end ajax_signup
+
+	public function get_signup_redirect_url( $redirect_url )
+	{
+		$result = array(
+			'redirect_url' => $redirect_url,
+			'post_vars' => NULL,
+			'user' => NULL,
+			'error' => NULL,
+		);
+
+		// is this a valid post from our signup page?
+		if ( ! check_admin_referer( 'go_subscriptions_signup' ) )
+		{
+			$result['error'] = 'Invalid data source';
+			return $result;
+		}
+
+		// do we have the post data we expect?
+		if ( ! isset( $_POST['go-subscriptions'] ) || empty( $_POST['go-subscriptions'] ) )
+		{
+			$result['error'] = 'Missing post data';
+			return $result;
+		}
+
+		// make a copy of the post vars to update it before passing them on
+		$result['post_vars'] = $_POST['go-subscriptions'];
+
+		// email validation
+		if ( empty( $result['post_vars']['email'] ) )
+		{
+			$result['error'] = 'Please enter an email address.';
+			return $result;
+		}
+
+		if ( ! is_email( $result['post_vars']['email'] ) )
+		{
+			$result['error'] = 'Please enter a valid email address.';
+			return $result;
+		}
+
+		if ( $user = get_user_by( 'email', sanitize_email( $result['post_vars']['email'] ) ) )
+		{
+			$result['user'] = $user;
+
+			if ( user_can( $user, 'subscriber' ) )
+			{
+				$result['error'] = 'User is already a subscriber.';
+			}
+			else
+			{
+				$result['error'] = 'Email is already in use.';
+			}
+			return $result;
+		}//end if
+
+		$return = $this->create_guest_user( $_POST['go-subscriptions'] );
+
+		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
+		{
+			// if this is a wijax request, let's redirect to the page we are already on
+			$result['redirect_url'] = home_url( $_SERVER['REQUEST_URI'] );
+		}
+		else
+		{
+			$result['redirect_url'] = isset( $_POST['go-subscriptions']['redirect'] ) ? wp_validate_redirect( $_POST['go-subscriptions']['redirect'], $this->config['subscription_path'] ) : $this->config['subscription_path'];
+		}
+
+		if ( is_wp_error( $return ) )
+		{
+			// we shouldn't be in here since we already checked for the
+			// existence of the email entered in our system, but...
+			if ( 'email-exists' == $return->get_error_code() )
+			{
+				// we are OK to redirect to the CC capture, the user has an
+				// account
+				$user = $return->get_error_data( 'email-exists' );
+
+				// if the user already has an account and an active
+				// subscription, redirect to the login page
+				if ( $user->ID && $user->has_cap( 'sub_state_active' ) )
+				{
+					$result['error'] = 'Email already linked to a subscription';
+					$result['redirect_url'] = $this->signin_url . '?action=lostpassword&has_subscription';
+					return $result;
+				}//end if
+
+				$result['redirect_url'] = add_query_arg( array( 'go-subscriptions[email]' => urlencode( $user->user_email ) ), $result['redirect_url'] );
+			}//end if
+			else
+			{
+//				$this->signup_form_fill = $return->get_error_data();
+//				$this->signup_form_fill['error'] = $return->get_error_message();
+				$result['redirect_url'] = $this->config['signup_path'];
+				$result['error'] = urlencode( $return->get_error_message() );
+			}//end else
+		}//end if
+		else
+		{
+			// there were no errors, the user is created, log them in.
+			$this->login_user( $return );
+
+			$result['user'] = get_user_by( 'id', $return );
+
+			if ( empty( $result['post_vars']['redirect_url'] ) )
+			{
+				$result['redirect_url'] = $this->config['thankyou_path'];
+			}
+			else
+			{
+				$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config['thankyou_path'] );
+			}
+		}//end else
+
+		return $result;
+	}//end ajax_process_signup_form
+
+	/**
+	 * the handler for "go_subscriptions_subscription_form" shortcode.
+	 *
+	 * @TODO verify that we don't actually get these params
+	 * @param array $user a user array whose 'obj' element is a WP_User object
+	 * @param array $atts attributes needed by the form
+	 * @return string the subscription form
+	 */
+	public function subscription_form( $user, $atts )
+	{
+		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
+
+		$user = wp_get_current_user();
+
+		if (
+			0 >= $user->ID ||
+			empty( $user->user_email ) ||
+			! user_can( $user, 'subscriber' )
+		)
+		{
+			// we don't have a user yet
+			$form = $this->signup_form( $_GET );
+		}
+
+		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID );
+	}//end subscription_form
 
 	/**
 	 * Creates a guest user if a user does not already exist with given email
