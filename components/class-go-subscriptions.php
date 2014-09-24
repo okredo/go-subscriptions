@@ -2,9 +2,10 @@
 
 class GO_Subscriptions
 {
-	public $config;
 	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
+
+	private $config = NULL;
 
 	// custom post types we need to filter user caps for
 	private $protected_post_types = array(
@@ -34,15 +35,8 @@ class GO_Subscriptions
 	 *
 	 * @param $config array of configuration settings
 	 */
-	public function __construct( $config = false )
+	public function __construct()
 	{
-		$this->config = apply_filters( 'go_config', $config, 'go-subscriptions' );
-		if ( empty( $this->config ) )
-		{
-			do_action( 'go_slog', 'go-subscriptions', 'Unable to load go-subscriptions config file. Aborting.' );
-			return;
-		}
-
 		// capture a few URLs to redirect to the homepage
 		add_action( 'plugins_loaded', array( $this, 'plugins_loaded' ) );
 
@@ -75,7 +69,7 @@ class GO_Subscriptions
 
 		// on any other blog, we do not want/need the rest of this plugin's
 		// functionality
-		if ( $this->config['accounts_blog_id'] != get_current_blog_id() )
+		if ( $this->config( 'accounts_blog_id' ) != get_current_blog_id() )
 		{
 			return;
 		}
@@ -112,13 +106,45 @@ class GO_Subscriptions
 		if (
 			in_array( $_SERVER['REQUEST_URI'],
 					  array( '/subscription', '/subscription/', '/register', 'register/' ) )
-			|| ( $this->config['signin_path'] == $_SERVER['REQUEST_URI'] && ! is_main_site() )
+			|| ( $this->config( 'signin_path' ) == $_SERVER['REQUEST_URI'] && ! is_main_site() )
 		)
 		{
-			wp_redirect( $this->config['signin_url'] );
+			wp_redirect( $this->config( 'signin_url' ) );
 			exit;
 		}
 	}//end plugins_loaded
+
+	/**
+	 * returns our current configuration, or a value in the configuration.
+	 *
+	 * @param string $key (optional) key to a configuration value
+	 * @return mixed Returns the config array, or a config value if
+	 *  $key is not NULL, or NULL if $key is specified but isn't set in
+	 *  our config file.
+	 */
+	public function config( $key = NULL )
+	{
+		if ( empty( $this->config ) )
+		{
+			$this->config = apply_filters(
+				'go_config',
+				array(),
+				'go-subscriptions'
+			);
+
+			if ( empty( $this->config ) )
+			{
+				do_action( 'go_slog', 'go-subscriptions', 'Unable to load go-subscriptions\' config file' );
+			}
+		}//END if
+
+		if ( ! empty( $key ) )
+		{
+			return isset( $this->config[ $key ] ) ? $this->config[ $key ] : NULL ;
+		}
+
+		return $this->config;
+	}//END config
 
 	/**
 	 * embeddable signup form
@@ -175,12 +201,12 @@ class GO_Subscriptions
 			'company'            => '',
 			'converted_post_id'  => get_the_ID(),
 			'email'              => '',
-			'redirect'           => $this->config['signup_path'],
+			'redirect'           => $this->config( 'signup_path' ),
 			'title'              => '',
 			'converted_vertical' => array_shift(
 				wp_get_object_terms(
 					get_the_ID(),
-					$this->config['section_taxonomy'],
+					$this->config( 'section_taxonomy' ),
 					array(
 						'orderby' => 'count',
 						'order' => 'DESC',
@@ -207,7 +233,7 @@ class GO_Subscriptions
 		// on Accounts, else we create users with unexpected roles on
 		// other blogs (e.g. 'subscriber' may be the default role on
 		// Research, which we definitely do not want).
-		$arr['ajax_url'] = get_admin_url( $this->config['accounts_blog_id'], '/admin-ajax.php', 'https' );
+		$arr['ajax_url'] = get_admin_url( $this->config( 'accounts_blog_id' ), '/admin-ajax.php', 'https' );
 
 		return $this->get_template_part( 'signup-form.php', $arr );
 	}//end signup_form
@@ -217,7 +243,7 @@ class GO_Subscriptions
 	 */
 	public function ajax_signup()
 	{
-		$result = $this->get_signup_redirect_url( $this->config['signup_path'] );
+		$result = $this->get_signup_redirect_url( $this->config( 'signup_path' ) );
 
 		$post_vars['go-subscriptions'] = array_intersect_key( $result['post_vars'], $this->signup_form_keys );
 
@@ -300,7 +326,7 @@ class GO_Subscriptions
 		}
 		else
 		{
-			$result['redirect_url'] = isset( $_POST['go-subscriptions']['redirect'] ) ? wp_validate_redirect( $_POST['go-subscriptions']['redirect'], $this->config['subscription_path'] ) : $this->config['subscription_path'];
+			$result['redirect_url'] = isset( $_POST['go-subscriptions']['redirect'] ) ? wp_validate_redirect( $_POST['go-subscriptions']['redirect'], $this->config( 'subscription_path' ) ) : $this->config( 'subscription_path' );
 		}
 
 		if ( is_wp_error( $return ) )
@@ -318,7 +344,7 @@ class GO_Subscriptions
 				if ( $user->ID && $user->has_cap( 'sub_state_active' ) )
 				{
 					$result['error'] = 'Email already linked to a subscription';
-					$result['redirect_url'] = $this->config['signin_url'] . '?action=lostpassword&has_subscription';
+					$result['redirect_url'] = $this->config( 'signin_url' ) . '?action=lostpassword&has_subscription';
 					return $result;
 				}//end if
 
@@ -326,7 +352,7 @@ class GO_Subscriptions
 			}//end if
 			else
 			{
-				$result['redirect_url'] = $this->config['signup_path'];
+				$result['redirect_url'] = $this->config( 'signup_path' );
 				$result['error'] = urlencode( $return->get_error_message() );
 			}//end else
 		}//end if
@@ -339,11 +365,11 @@ class GO_Subscriptions
 
 			if ( empty( $result['post_vars']['redirect_url'] ) )
 			{
-				$result['redirect_url'] = $this->config['thankyou_path'];
+				$result['redirect_url'] = $this->config( 'thankyou_path' );
 			}
 			else
 			{
-				$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config['thankyou_path'] );
+				$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'thankyou_path' ) );
 			}
 		}//end else
 
@@ -621,9 +647,9 @@ class GO_Subscriptions
 	 */
 	public function go_roles( $roles )
 	{
-		if ( is_array( $this->config['roles'] ) )
+		if ( is_array( $this->config( 'roles' ) ) )
 		{
-			$roles += $this->config['roles'];
+			$roles += $this->config( 'roles' );
 		}
 
 		return $roles;
@@ -731,11 +757,11 @@ class GO_Subscriptions
 		// note: wp_set_password will clear the user cache and result in the current logged in user being logged out.
 		wp_set_password( $password, $user_id );
 
-		switch_to_blog( $this->config['subscriptions_blog_id'] ); // make sure our urls go to research
+		switch_to_blog( $this->config( 'subscriptions_blog_id' ) ); // make sure our urls go to research
 
 		$args = array(
 			'SITE_URL' => network_site_url(),
-			'SIGNIN_URL' => $this->config['signin_url'],
+			'SIGNIN_URL' => $this->config( 'signin_url' ),
 			'TEMPLATE_URL' => get_template_directory_uri(),
 			'STYLESHEET_URL' => preg_replace( '/^https:/', 'http:', get_stylesheet_directory_uri() ),
 			'DATE_YEAR' => date( 'Y' ),
@@ -767,7 +793,7 @@ class GO_Subscriptions
 
 		// build the email params for the go-subscriptions-welcome-email filter
 		$email_args = array(
-			'to' => $user->email,
+			'to' => $user->user_email,
 			'subject' => 'Welcome!',
 			'headers' => array(),
 			'content' => '<placeholder>', // to be filled in my Mandrill
@@ -800,7 +826,7 @@ class GO_Subscriptions
 	{
 		$args = shortcode_atts( array(
 			'path'        => '', // the path is sanitized in home_url()
-			'redirect'    => $this->config['subscription_path'], // where do we redirect on a successful subscription
+			'redirect'    => $this->config( 'subscription_path' ), // where do we redirect on a successful subscription
 			'button_text' => '', // deprecated
 			'text'        => '',
 			'sub_text'    => '',
@@ -842,12 +868,12 @@ class GO_Subscriptions
 
 		if ( current_user_can( 'login_with_key' ) )
 		{
-			$args['url'] = $this->config['subscription_path'];
+			$args['url'] = $this->config( 'subscription_path' );
 			$args['nojs'] = true;
 		}
 		else
 		{
-			$args['url'] = $this->config['signup_path'];
+			$args['url'] = $this->config( 'signup_path' );
 			$args['nojs'] = false;
 		}
 
@@ -903,7 +929,7 @@ class GO_Subscriptions
 			return '';
 		}
 
-		return get_site_url( $this->config['subscriptions_blog_id'], '/?p=' . absint( $converted_meta['converted_post_id'] ) );
+		return get_site_url( $this->config( 'subscriptions_blog_id' ), '/?p=' . absint( $converted_meta['converted_post_id'] ) );
 	}//end get_converted_url
 
 	/**
@@ -955,7 +981,7 @@ class GO_Subscriptions
 	 */
 	public function site_option_welcome_user_email( $text )
 	{
-		return $this->config['welcome_user_email_text'];
+		return $this->config( 'welcome_user_email_text' );
 	}//end site_option_welcome_user_email
 }//end class
 
