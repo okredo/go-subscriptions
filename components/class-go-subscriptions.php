@@ -197,23 +197,22 @@ class GO_Subscriptions
 		$arr = ( is_array( $atts ) && isset( $atts['go-subscriptions'] ) ) ? $atts['go-subscriptions'] : array();
 
 		// setup default values
+		$section_taxonomy_terms = wp_get_object_terms(
+			get_the_ID(),
+			$this->config( 'section_taxonomy' ),
+			array(
+				'orderby' => 'count',
+				'order' => 'DESC',
+				'fields' => 'slugs',
+				)
+		);
 		$default_arr = array(
 			'company'            => '',
 			'converted_post_id'  => get_the_ID(),
 			'email'              => '',
 			'redirect'           => $this->config( 'signup_path' ),
 			'title'              => '',
-			'converted_vertical' => array_shift(
-				wp_get_object_terms(
-					get_the_ID(),
-					$this->config( 'section_taxonomy' ),
-					array(
-						'orderby' => 'count',
-						'order' => 'DESC',
-						'fields' => 'slugs',
-					)
-				)
-			),
+			'converted_vertical' => array_shift( $section_taxonomy_terms ),
 		);
 
 		// we'll take only non-empty values from $arr. rest will be filled
