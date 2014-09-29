@@ -316,7 +316,7 @@ class GO_Subscriptions
 			return $result;
 		}//end if
 
-		$return = $this->create_guest_user( $_POST['go-subscriptions'] );
+		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
 
 		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
 		{
