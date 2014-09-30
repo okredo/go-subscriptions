@@ -28,6 +28,7 @@ class GO_Subscriptions
 		'error'              => 1,
 		'redirect'           => 1,
 		'title'              => 1,
+		'is_subscriber'      => 1,
 	);
 
 	/**
@@ -256,19 +257,21 @@ class GO_Subscriptions
 
 		$post_vars['go-subscriptions'] = array_intersect_key( $result['post_vars'], $this->signup_form_keys );
 
-		$result['redirect_url'] = apply_filters( 'go_subscriptions_signup', $result['redirect_url'], $result['user'], $post_vars );
-
 		if ( ! empty( $result['error'] ) )
 		{
 			$post_vars['go-subscriptions']['error'] = $result['error'];
 		}
 
+		// encode the post var values
 		foreach ( $post_vars['go-subscriptions'] as $key => $val )
 		{
 			$post_vars['go-subscriptions'][ $key ] = urlencode( $val );
 		}
 
-		wp_redirect( add_query_arg( $post_vars, $result['redirect_url'] ) );
+		// apply our filter to get the final redirect url
+		$result['redirect_url'] = apply_filters( 'go_subscriptions_signup', $result['redirect_url'], $result['user'], $post_vars );
+
+		wp_redirect( $result['redirect_url'] );
 		die;
 	}//end ajax_signup
 
@@ -311,21 +314,6 @@ class GO_Subscriptions
 			return $result;
 		}
 
-		if ( $user = get_user_by( 'email', sanitize_email( $result['post_vars']['email'] ) ) )
-		{
-			$result['user'] = $user;
-
-			if ( user_can( $user, 'subscriber' ) )
-			{
-				$result['error'] = 'User is already a subscriber.';
-			}
-			else
-			{
-				$result['error'] = 'Email is already in use.';
-			}
-			return $result;
-		}//end if
-
 		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
 
 		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
@@ -357,7 +345,8 @@ class GO_Subscriptions
 					return $result;
 				}//end if
 
-				$result['redirect_url'] = add_query_arg( array( 'go-subscriptions[email]' => urlencode( $user->user_email ) ), $result['redirect_url'] );
+				$result['post_vars']['email'] = $user->user_email;
+				$result['post_vars']['is_subscriber'] = FALSE; // tags the user as a non-subscriber
 			}//end if
 			else
 			{
@@ -405,7 +394,16 @@ class GO_Subscriptions
 			! user_can( $user, 'subscriber' )
 		)
 		{
-			// we don't have a user yet
+			// we don't have a user yet, but we may have an email for a non-subscriber
+			if (
+				! empty( $_GET['go-subscriptions']['email'] ) &&
+				isset( $_GET['go-subscriptions']['is_subscriber'] ) &&
+				empty( $_GET['go-subscriptions']['is_subscriber'] )
+			)
+			{
+				$user = get_user_by( 'email', $_GET['go-subscriptions']['email'] );
+			}
+
 			$form = $this->signup_form( $_GET );
 		}
 
