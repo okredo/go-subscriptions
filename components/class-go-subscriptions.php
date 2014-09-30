@@ -334,18 +334,18 @@ class GO_Subscriptions
 			{
 				// we are OK to redirect to the CC capture, the user has an
 				// account
-				$user = $return->get_error_data( 'email-exists' );
+				$result['user'] = $return->get_error_data( 'email-exists' );
 
 				// if the user already has an account and an active
 				// subscription, redirect to the login page
-				if ( $user->ID && $user->has_cap( 'sub_state_active' ) )
+				if ( $result['user']->ID && $result['user']->has_cap( 'sub_state_active' ) )
 				{
 					$result['error'] = 'Email already linked to a subscription';
 					$result['redirect_url'] = $this->config( 'signin_url' ) . '?action=lostpassword&has_subscription';
 					return $result;
 				}//end if
 
-				$result['post_vars']['email'] = $user->user_email;
+				$result['post_vars']['email'] = $result['user']->user_email;
 				$result['post_vars']['is_subscriber'] = FALSE; // tags the user as a non-subscriber
 			}//end if
 			else
