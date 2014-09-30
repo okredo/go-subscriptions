@@ -206,6 +206,7 @@ class GO_Subscriptions
 				'fields' => 'slugs',
 				)
 		);
+
 		$default_arr = array(
 			'company'            => '',
 			'converted_post_id'  => get_the_ID(),
@@ -214,6 +215,15 @@ class GO_Subscriptions
 			'title'              => '',
 			'converted_vertical' => array_shift( $section_taxonomy_terms ),
 		);
+
+		// we may get here for a signed-in user who has no email
+		$user = wp_get_current_user();
+		if ( 0 < $user->ID )
+		{
+			$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $user->ID );
+			$default_arr['company'] = isset( $profile_data['company'] ) ? $profile_data['company'] : '';
+			$default_arr['title'] = isset( $profile_data['title'] ) ? $profile_data['title'] : '';
+		}
 
 		// we'll take only non-empty values from $arr. rest will be filled
 		// with values from $dafault_arr
@@ -316,7 +326,7 @@ class GO_Subscriptions
 			return $result;
 		}//end if
 
-		$return = $this->create_guest_user( $_POST['go-subscriptions'] );
+		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
 
 		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
 		{
