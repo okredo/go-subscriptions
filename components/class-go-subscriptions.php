@@ -407,7 +407,7 @@ class GO_Subscriptions
 			$form = $this->signup_form( $_GET );
 		}
 
-		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID );
+		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
 	}//end subscription_form
 
 	/**
