@@ -1,7 +1,7 @@
 <?php
 if ( apply_filters( 'go_site_locked', FALSE ) )
 {
-	go_site_lock()->lock_screen( 'Signing up for an account' );
+	go_sitelock()->lock_screen( 'Signing up for an account' );
 	return;
 }//end if
 ?>
