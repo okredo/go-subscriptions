@@ -155,27 +155,27 @@ class GO_Subscriptions
 	 */
 	public function is_signup()
 	{
-		if ( NULL !== $this->is_signup )
+		if ( NULL === $this->is_signup )
 		{
-			return $this->is_signup;
-		}
+			// are we on sign up or sign in page?
+			$signup_parts = parse_url( $this->config( 'signup_path' ) );
 
-		// are we on sign up or sign in page?
-		$signup_parts = parse_url( $this->config( 'signup_path' ) );
+			$req_parts = parse_url( $_SERVER['REQUEST_URI'] );
 
-		$req_parts = parse_url( $_SERVER['REQUEST_URI'] );
-
-		if ( FALSE !== strpos( $req_parts['path'], $signup_parts['path'] ) )
-		{
-			$this->is_signup = TRUE;
+			if ( FALSE !== strpos( $req_parts['path'], $signup_parts['path'] ) )
+			{
+				$this->is_signup = TRUE;
+			}
+			else
+			{
+				$this->is_signup = FALSE;
+			}
 		}
-		else
-		{
-			$this->is_signup = FALSE;
-		}
+		else golog( '$this->is_signup not NULL' );
 
 		return $this->is_signup;
 	}//END is_signup
+
 
 	/**
 	 * embeddable signup form
