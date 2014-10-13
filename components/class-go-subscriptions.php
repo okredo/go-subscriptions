@@ -6,6 +6,7 @@ class GO_Subscriptions
 	public $version = '2';
 
 	private $config = NULL;
+	private $is_signup = NULL;
 
 	// custom post types we need to filter user caps for
 	private $protected_post_types = array(
@@ -146,6 +147,35 @@ class GO_Subscriptions
 
 		return $this->config;
 	}//END config
+
+	/**
+	 * check if we're on the sign up page
+	 *
+	 * @return bool return TRUE if we're on the sign-up page, FALSE if not
+	 */
+	public function is_signup()
+	{
+		if ( NULL !== $this->is_signup )
+		{
+			return $this->is_signup;
+		}
+
+		// are we on sign up or sign in page?
+		$signup_parts = parse_url( $this->config( 'signup_path' ) );
+
+		$req_parts = parse_url( $_SERVER['REQUEST_URI'] );
+
+		if ( FALSE !== strpos( $req_parts['path'], $signup_parts['path'] ) )
+		{
+			$this->is_signup = TRUE;
+		}
+		else
+		{
+			$this->is_signup = FALSE;
+		}
+
+		return $this->is_signup;
+	}//END is_signup
 
 	/**
 	 * embeddable signup form
