@@ -8,11 +8,14 @@
 
 		<p class="continue">
 			<?php
-			if ( ( $converted_meta = go_subscriptions()->get_converted_meta( get_current_user_id() ) ) && ! empty( $converted_meta['converted_post_id'] ) )
+			// check if the user has a converted post or not
+			$converted_post_id = apply_filters( 'go_subscriptions_converted_post_id', NULL, get_current_user_id() );
+
+			if ( ! empty( $converted_post_id ) )
 			{
 				?>
-				<a class="button button-large" title="Continue to report" href="<?php echo get_permalink( $converted_meta['converted_post_id'] ); ?>">Continue to report</a> <br />
-				<em><?php echo get_the_title( $converted_meta['converted_post_id'] ); ?></em>
+				<a class="button button-large" title="Continue to report" href="<?php echo get_permalink( $converted_post_id ); ?>">Continue to report</a> <br />
+				<em><?php echo get_the_title( $converted_post_id ); ?></em>
 				<?php
 			}//end if
 			else

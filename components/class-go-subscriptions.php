@@ -49,6 +49,9 @@ class GO_Subscriptions
 		// add custom roles
 		add_filter( 'go_roles', array( $this, 'go_roles' ) );
 
+		// get a user's converted post id
+		add_filter( 'go_subscriptions_converted_post_id', array( $this, 'go_subscriptions_converted_post_id' ), 10, 2 );
+
 		if ( is_admin() )
 		{
 			add_action( 'wp_ajax_go-subscriptions-signup-form', array( $this, 'ajax_signup_form' ) );
@@ -595,13 +598,6 @@ class GO_Subscriptions
 		{
 			$all_caps['read_post'] = $all_caps['read'] = TRUE;
 		}
-		elseif ( isset( $all_caps['read_post'] ) || isset( $all_caps['read'] ) )
-		{
-			// they DO NOT have an active subscription, but they somehow have the read_post cap
-			// explicitly force the removal of this read privilege
-			unset( $all_caps['read_post'] );
-			unset( $all_caps['read'] );
-		}//END elseif
 
 		return $all_caps;
 	}//END user_has_cap_read_post
@@ -661,6 +657,30 @@ class GO_Subscriptions
 
 		return $roles;
 	}//end go_roles
+
+	/**
+	 * hook to the go_subscriptions_converted_post_id filter to return
+	 * a converted post id if any.
+	 *
+	 * @param int $post_id the post id to filter
+	 * @param int $user_id user id
+	 */
+	public function go_subscriptions_converted_post_id( $post_id, $user_id )
+	{
+		if ( ! $user = get_user_by( 'id', $user_id ) )
+		{
+			return $post_id;
+		}
+
+		$converted_meta = $this->get_converted_meta( $user_id );
+
+		if ( empty( $converted_meta['converted_post_id'] ) )
+		{
+			return $post_id;
+		}
+
+		return $converted_meta['converted_post_id'];
+	}//END go_subscriptions_converted_post_id
 
 	/**
 	 * get a signup button
