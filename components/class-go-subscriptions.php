@@ -50,7 +50,7 @@ class GO_Subscriptions
 		add_filter( 'go_roles', array( $this, 'go_roles' ) );
 
 		// get a user's converted post id
-		add_filter( 'go_subscriptions_converted_post_id', array( $this, 'go_subscriptions_converted_post_id' ), 10, 2 );
+		add_filter( 'go_subscriptions_thankyoucta', array( $this, 'go_subscriptions_thankyoucta' ), 10, 2 );
 
 		if ( is_admin() )
 		{
@@ -659,27 +659,38 @@ class GO_Subscriptions
 	}//end go_roles
 
 	/**
-	 * hook to the go_subscriptions_converted_post_id filter to return
-	 * a converted post id if any.
+	 * hook to the go_subscriptions_thankyoucta filter to return custom
+	 * contents for the cta button on the thank you page
 	 *
-	 * @param int $post_id the post id to filter
+	 * @param array $cta_contents ['text']  button text and title
+	 *                            ['url']   button href
+	 *                            ['class'] button class
+	 *                            ['sub_text_html'] html for any subtitle below the button
 	 * @param int $user_id user id
 	 */
-	public function go_subscriptions_converted_post_id( $post_id, $user_id )
+	public function go_subscriptions_thankyoucta( $cta_contents, $user_id )
 	{
+		// validate the user
 		if ( ! $user = get_user_by( 'id', $user_id ) )
 		{
-			return $post_id;
+			return $cta_contents;
 		}
 
+		// check if we have a converted post or not
 		$converted_meta = $this->get_converted_meta( $user_id );
 
 		if ( empty( $converted_meta['converted_post_id'] ) )
 		{
-			return $post_id;
+			return $cta_contents;
 		}
 
-		return $converted_meta['converted_post_id'];
+		// we do. lets update the button
+		$cta_contents['text']  = 'Continue to report';
+		$cta_contents['url']   = get_permalink( $converted_meta['converted_post_id'] );
+		$cta_contents['class']  = 'button-large';
+		$cta_contents['sub_text_html'] = '<br /><em>' . get_the_title( $converted_meta['converted_post_id'] ) . '</em>';
+
+		return $cta_contents;
 	}//END go_subscriptions_converted_post_id
 
 	/**
