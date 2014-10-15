@@ -167,10 +167,26 @@ class GO_Subscriptions
 
 			if ( isset( $get_vars['converted_post_id'] ) )
 			{
-				$atts['go-subscriptions']['converted_post_id'] = absint( $get_vars['converted_post_id'] );
-			}
+				$converted_post_id = absint( $get_vars['converted_post_id'] );
 
-			if ( isset( $get_vars['converted_vertical'] ) )
+				// lets do some validation. we only want to set this if we're
+				// on a single page and the post is not a page
+				if (
+					0 < $converted_post_id &&
+					! is_page( $converted_post_id ) &&
+					is_single( $converted_post_id )
+				)
+				{
+					$atts['go-subscriptions']['converted_post_id'] = $converted_post_id;
+				}
+			}//END if
+
+			// do not bother to set converted vertical if we don't have
+			// a converted post id
+			if (
+				isset( $get_vars['converted_vertical'] ) &&
+				isset( $atts['go-subscriptions']['converted_post_id'] )
+			)
 			{
 				$atts['go-subscriptions']['converted_vertical'] = sanitize_title_with_dashes( $get_vars['converted_vertical'] );
 			}
@@ -198,19 +214,34 @@ class GO_Subscriptions
 		$arr = ( is_array( $atts ) && isset( $atts['go-subscriptions'] ) ) ? $atts['go-subscriptions'] : array();
 
 		// setup default values
-		$section_taxonomy_terms = wp_get_object_terms(
-			get_the_ID(),
-			$this->config( 'section_taxonomy' ),
-			array(
-				'orderby' => 'count',
-				'order' => 'DESC',
-				'fields' => 'slugs',
+		$converted_post_id = 0;
+		$converted_post = get_post();
+		if (
+			$converted_post &&
+			! is_page( $converted_post->ID ) &&
+			is_single( $converted_post->ID )
+		)
+		{
+			$converted_post_id = $converted_post->ID;
+		}
+
+		$section_taxonomy_terms = array( '' );
+		if ( 0 < $converted_post_id )
+		{
+			$section_taxonomy_terms = wp_get_object_terms(
+				$converted_post_id,
+				$this->config( 'section_taxonomy' ),
+				array(
+					'orderby' => 'count',
+					'order' => 'DESC',
+					'fields' => 'slugs',
 				)
-		);
+			);
+		}//END if
 
 		$default_arr = array(
 			'company'            => '',
-			'converted_post_id'  => get_the_ID(),
+			'converted_post_id'  => $converted_post_id,
 			'email'              => '',
 			'redirect'           => $this->config( 'signup_path' ),
 			'title'              => '',
