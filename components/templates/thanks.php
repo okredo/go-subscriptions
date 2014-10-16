@@ -8,20 +8,18 @@
 
 		<p class="continue">
 			<?php
-			if ( ( $converted_meta = go_subscriptions()->get_converted_meta( get_current_user_id() ) ) && ! empty( $converted_meta['converted_post_id'] ) )
-			{
-				?>
-				<a class="button button-large" title="Continue to report" href="<?php echo get_permalink( $converted_meta['converted_post_id'] ); ?>">Continue to report</a> <br />
-				<em><?php echo get_the_title( $converted_meta['converted_post_id'] ); ?></em>
-				<?php
-			}//end if
-			else
-			{
-				?>
-				<a class="button primary" title="Continue to home page" href="<?php echo home_url( '/' ); ?>">Continue to home page</a>
-				<?php
-			}//end else
+			// give others a chance to override the button CTA
+			$cta_contents = array(
+				'text'  => 'Continue to home page',
+				'url'   => home_url( '/' ),
+				'class' => 'primary',
+				'sub_text_html' => '', // what goes below the button
+			);
+
+			$cta_contents = apply_filters( 'go_subscriptions_thankyoucta', $cta_contents, get_current_user_id() );
 			?>
+			<a class="button <?php echo $cta_contents['class']; ?>" title="<?php echo $cta_contents['text']; ?>" href="<?php echo $cta_contents['url']; ?>"><?php echo $cta_contents['text']; ?></a>
+			<?php echo $cta_contents['sub_text_html']; ?>
 		</p>
 	</div>
 	<div id="thanks-actions">
