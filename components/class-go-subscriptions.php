@@ -299,7 +299,7 @@ class GO_Subscriptions
 		// encode the post var values
 		foreach ( $post_vars['go-subscriptions'] as $key => $val )
 		{
-			$post_vars['go-subscriptions'][ $key ] = urlencode( $val );
+			$post_vars['go-subscriptions'][ $key ] = rawurlencode( $val );
 		}
 
 		// apply our filter to get the final redirect url
