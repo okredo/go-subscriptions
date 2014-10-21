@@ -16,7 +16,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	}// end if
 
 	?>
-	<h3>Access to Gigaom Research for one week, completely Free</h3>
+	<h3>Register to read the full text of one report.</h3>
 	<div id="form-wrapper">
 		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo $template_variables['ajax_url']; ?>">
 			<input type="hidden" name="action" value="go-subscriptions-signup" />
@@ -58,8 +58,8 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	<div id="marketing-box">
 		<?php include get_stylesheet_directory() . '/img/research.svg'; ?>
 		<div>
-			<h2>Get a <strong>full year</strong> of unlimited emerging technology research and analysis for only <strong>$299</strong>.</h2>
-			<p>With over 200 independent analysts in our network covering cloud, data, mobile, social, connected-consumer, and cleantech, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
+			<h2>Register to create <strong>free account</strong> and get full access to <strong>any single report</strong>.</h2>
+			<p>When you register with Gigaom Research, you gain access to the full text of any report of your choosing. We also make other reports available from time to time available only to registered users. With over 200 independent analysts in our network, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
 		</div>
 	</div>
 
