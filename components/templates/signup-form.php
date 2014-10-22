@@ -16,7 +16,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	}// end if
 
 	?>
-	<h3>Access to Gigaom Research for one week, completely Free</h3>
+	<header>Access to Gigaom Research for one week, completely Free</header>
 	<div id="form-wrapper">
 		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo $template_variables['ajax_url']; ?>">
 			<input type="hidden" name="action" value="go-subscriptions-signup" />
@@ -63,9 +63,9 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 		</div>
 	</div>
 
-	<h3 class="skip-to-login">
+	<header class="skip-to-login">
 		Already have an account?<br/>
 		<a href="<?php echo wp_login_url(); ?>" class="sign-in-link sign-in">Sign in</a> now.
-	</h3>
+	</header>
 </div>
 
