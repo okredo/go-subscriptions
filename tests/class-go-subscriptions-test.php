@@ -72,7 +72,6 @@ class GO_Subscriptions_Test extends WP_UnitTestCase
 
 		$this->assertFalse( empty( $converted_url ) );
 		$this->assertTrue( 0 < strpos( $converted_url, '218186' ) );
-		$this->assertTrue( 0 < stripos( $converted_url, 'research' ) );
 	}//END test_get_converted_url
 
 	private function create_user( $args )
