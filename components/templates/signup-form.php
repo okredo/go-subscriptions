@@ -58,7 +58,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	<div id="marketing-box">
 		<?php include get_stylesheet_directory() . '/img/research.svg'; ?>
 		<div>
-			<h2>Register to create <strong>free account</strong> and get full access to <strong>any single report</strong>.</h2>
+			<h2>Register to create a <strong>free account</strong> and get full access to <strong>any single report</strong>.</h2>
 			<p>When you register with Gigaom Research, you gain access to the full text of any report of your choosing. We also make other reports available from time to time available only to registered users. With over 200 independent analysts in our network, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
 		</div>
 	</div>
