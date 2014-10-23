@@ -372,16 +372,7 @@ class GO_Subscriptions
 
 				// if the user already has an account with an active
 				// subscription, or is an admin, redirect to the sign-in page
-				if (
-					$result['user']->ID &&
-					(
-						$result['user']->has_cap( 'sub_state_active' ) ||
-						$result['user']->has_cap( 'subscriber-enterprise' ) ||
-						$result['user']->has_cap( 'subscriber-lifetime' ) ||
-						$result['user']->has_cap( 'manage_options' ) ||
-						$result['user']->has_cap( 'manage_network_options' )
-					)
-				)
+				if ( $result['user']->ID && $result['user']->has_cap( 'subscriber' ) )
 				{
 					$result['error'] = 'Email already linked to a subscription';
 					$result['redirect_url'] = $this->config( 'signin_url' ) . '?action=lostpassword&has_subscription';
