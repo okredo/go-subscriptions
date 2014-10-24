@@ -16,7 +16,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	}// end if
 
 	?>
-	<header>Register to read the full text of one report.</header>
+	<header>Register to gain access to any single report for free.</header>
 	<div id="form-wrapper">
 		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo $template_variables['ajax_url']; ?>">
 			<input type="hidden" name="action" value="go-subscriptions-signup" />
