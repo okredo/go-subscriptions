@@ -4,6 +4,7 @@ class GO_Subscriptions
 {
 	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
+	public $signin_message_key = 'go-subscriptions-sign-in-message';
 
 	private $config = NULL;
 
@@ -801,6 +802,16 @@ class GO_Subscriptions
 		{
 			$message = preg_replace( '#<p class="message">#', '<p class="message">It looks like you already have a subscription! ', $message );
 		}
+		elseif ( ! empty( $_GET[ $this->signin_message_key ] ) )
+		{
+			$message_id = absint( $_GET[ $this->signin_message_key ] );
+
+			$signin_messages = $this->config( 'signin_messages' );
+			if ( ! empty( $signin_messages[ $message_id ] ) )
+			{
+				$message = $signin_messages[ $message_id ];
+			}
+		}//END elseif
 
 		return $message;
 	}//end login_message
