@@ -1,11 +1,6 @@
 <div id="subscribe" class="thanks ok">
-	<p class="subtext">Your account is now activated. Please check your email for your subscription confirmation.</p>
 	<div class="thanks-primary">
-		<div id="thanks-video" class="flex-video">
-			<iframe src="//player.vimeo.com/video/77229848?byline=0&amp;portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-			<p><a href="http://vimeo.com/77229848">Gigaom Research Tour</a> from <a href="http://vimeo.com/user14399801">Gigaom</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
-		</div>
-
+		<p class="subtext">Your account is now activated. Please check your email for your subscription confirmation. Click the button below to continue or search our archives</a>.</p>
 		<p class="continue">
 			<?php
 			// give others a chance to override the button CTA
@@ -23,20 +18,6 @@
 		</p>
 	</div>
 	<div id="thanks-actions">
-		<?php
-		if ( function_exists( 'go_oauth' ) )
-		{
-			?>
-			<div class="thanks-block thanks-connect">
-				<p>
-					Make logging in easier by connecting to:
-				</p>
-				[goauth_get_connect_buttons action=login_connect class=social-login-buttons]
-			</div>
-			<?php
-		}//end if
-
-		?>
 		<div class="thanks-block thanks-follow">
 			Follow us on <a href="https://twitter.com/gigaomresearch">Twitter</a>,
 			subscribe via <a href="http://accounts.gigaom.com/newsletters/">email</a>
