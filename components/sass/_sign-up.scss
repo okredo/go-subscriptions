@@ -5,9 +5,10 @@
 		text-decoration: none;
 	}
 
-	h3 {
+	header {
 		@include subtext;
 		margin-bottom: 1.6em;
+		color: #808080;
 	}
 
 	li {
@@ -115,7 +116,7 @@
 		font-size: 1.4em;
 	}
 
-	h3 {
+	header {
 		margin-top: 0;
 		max-width: 350px;
 	}
