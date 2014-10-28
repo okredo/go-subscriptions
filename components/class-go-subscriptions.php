@@ -342,7 +342,7 @@ class GO_Subscriptions
 		{
 			$result['error'] = 'Invalid data source';
 			return $result;
-		}
+		}//END if
 
 		// do we have the post data we expect?
 		if ( ! isset( $_POST['go-subscriptions'] ) || empty( $_POST['go-subscriptions'] ) )
@@ -458,7 +458,7 @@ class GO_Subscriptions
 			}
 
 			$form = $this->signup_form( $_GET );
-		}
+		}//END if
 
 		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
 	}//end subscription_form
@@ -741,7 +741,7 @@ class GO_Subscriptions
 		$cta_contents['sub_text_html'] = '<br /><em>' . get_the_title( $converted_meta['converted_post_id'] ) . '</em>';
 
 		return $cta_contents;
-	}//END go_subscriptions_converted_post_id
+	}//END go_subscriptions_thankyoucta
 
 	/**
 	 * get a signup button
