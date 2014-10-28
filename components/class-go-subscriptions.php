@@ -319,8 +319,26 @@ class GO_Subscriptions
 			'error' => NULL,
 		);
 
-		// is this a valid post from our signup page?
-		if ( ! check_admin_referer( 'go_subscriptions_signup' ) )
+		// is this a valid post from our signup page? this action must
+		// match the one in templates/signup-form.php
+		//
+		// skip this test for authenticated users who do not have
+		// an email address yet because these users did not get a wp session
+		// token on the pop-up signup form, but they do now, so their nonce
+		// will not pass this test. see https://github.com/GigaOM/legacy-pro/issues/4452#issuecomment-60812703
+		// @TODO address this after deploy to figure out why we don't have
+		// a session token in the first sign-up form admin ajax call
+		$user = wp_get_current_user();
+		if (
+			// only do this check if the user is not signed in or if
+			// we have the user's email address
+			(
+				! is_user_logged_in() ||
+				! empty( $user->user_email )
+			)
+			&&
+			! check_admin_referer( 'go_subscriptions_signup' )
+		)
 		{
 			$result['error'] = 'Invalid data source';
 			return $result;
