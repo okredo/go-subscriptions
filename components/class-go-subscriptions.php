@@ -319,12 +319,30 @@ class GO_Subscriptions
 			'error' => NULL,
 		);
 
-		// is this a valid post from our signup page?
-		if ( ! check_admin_referer( 'go_subscriptions_signup' ) )
+		// is this a valid post from our signup page? this action must
+		// match the one in templates/signup-form.php
+		//
+		// skip this test for authenticated users who do not have
+		// an email address yet because these users did not get a wp session
+		// token on the pop-up signup form, but they do now, so their nonce
+		// will not pass this test. see https://github.com/GigaOM/legacy-pro/issues/4452#issuecomment-60812703
+		// @TODO address this after deploy to figure out why we don't have
+		// a session token in the first sign-up form admin ajax call
+		$user = wp_get_current_user();
+		if (
+			// only do this check if the user is not signed in or if
+			// we have the user's email address
+			(
+				! is_user_logged_in() ||
+				! empty( $user->user_email )
+			)
+			&&
+			! check_admin_referer( 'go_subscriptions_signup' )
+		)
 		{
 			$result['error'] = 'Invalid data source';
 			return $result;
-		}
+		}//END if
 
 		// do we have the post data we expect?
 		if ( ! isset( $_POST['go-subscriptions'] ) || empty( $_POST['go-subscriptions'] ) )
@@ -440,7 +458,7 @@ class GO_Subscriptions
 			}
 
 			$form = $this->signup_form( $_GET );
-		}
+		}//END if
 
 		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
 	}//end subscription_form
@@ -723,7 +741,7 @@ class GO_Subscriptions
 		$cta_contents['sub_text_html'] = '<br /><em>' . get_the_title( $converted_meta['converted_post_id'] ) . '</em>';
 
 		return $cta_contents;
-	}//END go_subscriptions_converted_post_id
+	}//END go_subscriptions_thankyoucta
 
 	/**
 	 * get a signup button
