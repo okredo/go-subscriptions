@@ -15,6 +15,10 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 		<?php
 	}// end if
 
+	if ( ! empty( $template_variables['header'] ) )
+	{
+		echo '<header>' . wp_kses( $template_variables['header'], array() ) . "</header>\n";
+	}
 	?>
 	<div id="form-wrapper">
 		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo $template_variables['ajax_url']; ?>">
