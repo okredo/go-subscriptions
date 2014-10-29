@@ -474,10 +474,11 @@ class GO_Subscriptions
 	 *
 	 * @param $user_arr array Array of user data
 	 * @param $role array Role to assign on creation
+	 * @param $log_in_user bool to determine whether or not to log user in. If this is part of a batch onboard this must be false.
 	 * @return mixed WP_User if we're able to create a new guest user,
 	 *  or WP_Error if we cannot create the user for some reason
 	 */
-	public function create_guest_user( $user_arr, $role = 'guest-prospect' )
+	public function create_guest_user( $user_arr, $role = 'guest', $log_in_user = TRUE )
 	{
 		// user array must contain: email
 		$result = $this->validate_clean_user( $user_arr );
@@ -487,7 +488,7 @@ class GO_Subscriptions
 			return $result;
 		}
 
-		$user = go_user_profile()->create_guest_user( $user_arr['email'], $role );
+		$user = go_user_profile()->create_guest_user( $user_arr['email'], $role, $log_in_user );
 
 		if ( ! $user )
 		{
