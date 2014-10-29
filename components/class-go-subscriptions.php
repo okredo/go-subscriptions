@@ -209,7 +209,7 @@ class GO_Subscriptions
 		// is there a header for the signup pop-up dialog box?
 		if ( $header = $this->config( 'signup_popup_header' ) )
 		{
-			$atts['go-subscriptions']['header'] = $this->config( 'signup_popup_header' );
+			$atts['go-subscriptions']['header'] = $header;
 		}
 
 		echo $this->signup_form( $atts );
