@@ -17,7 +17,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 
 	if ( ! empty( $template_variables['header'] ) )
 	{
-		echo '<header>' . wp_kses( $template_variables['header'], array() ) . "</header>\n";
+		echo '<header>' . esc_html( $template_variables['header'] ) . "</header>\n";
 	}
 	?>
 	<div id="form-wrapper">
