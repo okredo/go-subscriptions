@@ -7,8 +7,8 @@
 
 	header {
 		@include subtext;
-		margin-bottom: 1.6em;
 		color: #808080;
+		margin-bottom: 1.6em;
 	}
 
 	li {
@@ -35,9 +35,6 @@
 		position: relative;
 		width: 350px;
 
-		@include min-screen( 960px) {
-			margin-bottom: 60px;
-		}
 
 		strong {
 			color: #999a9b;
@@ -123,10 +120,6 @@
 
 	#form-wrapper {
 		max-width: 350px;
-
-		@include min-screen( 960px ) {
-			float: left;
-		}
 	}
 
 	#marketing-box {
