@@ -472,7 +472,7 @@ class GO_Subscriptions
 	 * @return mixed WP_User if we're able to create a new guest user,
 	 *  or WP_Error if we cannot create the user for some reason
 	 */
-	public function create_guest_user( $user_arr, $role = 'guest-prospect', $log_in_user = TRUE )
+	public function create_guest_user( $user_arr, $role = 'guest', $log_in_user = TRUE )
 	{
 		// user array must contain: email
 		$result = $this->validate_clean_user( $user_arr );
