@@ -20,18 +20,6 @@ class GO_Subscriptions
 		'comment',
 	);
 
-	// accepted query vars for the signup form
-	private $signup_form_keys = array(
-		'company'            => 1,
-		'converted_post_id'  => 1,
-		'converted_vertical' => 1,
-		'email'              => 1,
-		'error'              => 1,
-		'redirect'           => 1,
-		'title'              => 1,
-		'is_subscriber'      => 1,
-	);
-
 	/**
 	 * constructor
 	 *
@@ -296,7 +284,7 @@ class GO_Subscriptions
 	{
 		$result = $this->get_signup_redirect_url( $this->config( 'signup_path' ) );
 
-		$post_vars['go-subscriptions'] = array_intersect_key( $result['post_vars'], $this->signup_form_keys );
+		$post_vars['go-subscriptions'] = $result['post_vars'];
 
 		if ( ! empty( $result['error'] ) )
 		{
