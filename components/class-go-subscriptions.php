@@ -888,7 +888,7 @@ class GO_Subscriptions
 
 		// check if the user is in the midst of a trial period and use
 		// the trial template if so
-		if ( ! empty( $subscription['sub_trial_started_at'] ) )
+		if ( ! empty( $subscription['sub_trial_started_at'] ) && ! empty( $subscription['sub_trial_ends_at'] ) )
 		{
 			$trial_start  = strtotime( $subscription['sub_trial_started_at'] );
 			$trial_end    = strtotime( $subscription['sub_trial_ends_at'] );
