@@ -886,15 +886,19 @@ class GO_Subscriptions
 
 		$email_template = 'research-welcome';
 
-		$trial_start  = strtotime( $subscription['sub_trial_started_at'] );
-		$trial_end    = strtotime( $subscription['sub_trial_ends_at'] );
-		$now          = time();
-
-		// if the user is in the midst of a trial, use the trial template
-		if ( $now >= $trial_start && $now <= $trial_end )
+		// check if the user is in the midst of a trial period and use
+		// the trial template if so
+		if ( ! empty( $subscription['sub_trial_started_at'] ) && ! empty( $subscription['sub_trial_ends_at'] ) )
 		{
-			$email_template .= '-trial';
-		}
+			$trial_start  = strtotime( $subscription['sub_trial_started_at'] );
+			$trial_end    = strtotime( $subscription['sub_trial_ends_at'] );
+			$now          = time();
+
+			if ( $now >= $trial_start && $now <= $trial_end )
+			{
+				$email_template .= '-trial';
+			}
+		}//END if
 
 		// build the email params for the go-subscriptions-welcome-email filter
 		$email_args = array(
