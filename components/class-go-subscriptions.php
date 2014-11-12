@@ -834,7 +834,6 @@ class GO_Subscriptions
 	 *
 	 * @param $user_id int WordPress user id
 	 * @param $subscription array details about the new subscription
-	 * @param $log_back_in bool to determine if should log back in after wp_set_password()
 	 */
 	public function send_welcome_email( $user_id, $subscription )
 	{
