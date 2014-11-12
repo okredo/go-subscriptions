@@ -214,6 +214,7 @@ class GO_Subscriptions
 		// setup default values
 		$converted_post_id = 0;
 		$converted_post = get_post();
+
 		if (
 			$converted_post &&
 			! is_page( $converted_post->ID ) &&
@@ -248,6 +249,7 @@ class GO_Subscriptions
 
 		// we may get here for a signed-in user who has no email
 		$user = wp_get_current_user();
+
 		if ( 0 < $user->ID )
 		{
 			$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $user->ID );
@@ -361,6 +363,35 @@ class GO_Subscriptions
 			return $result;
 		}
 
+		// if subscription request is advisory, we also must validate
+		// the company name
+		if ( ! empty( $result['post_vars']['sub_request'] ) && 'advisory' == $result['post_vars']['sub_request'] )
+		{
+			if ( empty( $result['post_vars']['company'] ) )
+			{
+				$result['error'] = 'Please enter an advisory team name.';
+				return $result;
+			}
+
+			// the advisory name must not already exist (as a go-enterprise)
+			// using $wpdb to avoid a blog switch
+			global $wpdb;
+			$duplicate_count = $wpdb->get_var( $wpdb->prepare(
+				'SELECT COUNT(*)
+				 FROM wp_' . $this->config( 'accounts_blog_id' ) . '_posts
+				 WHERE post_type = "go-enterprise" AND post_status = "publish" AND post_title = %s',
+				$result['post_vars']['company']
+			) );
+
+			if ( 0 < $duplicate_count )
+			{
+				$result['error'] = 'Advisory team name "' . $result['post_vars']['company'] . '" already taken.';
+				return $result;
+			}
+
+			// @TODO create an advisory enterprise
+		}//END if
+
 		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
 
 		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
@@ -398,6 +429,10 @@ class GO_Subscriptions
 			else
 			{
 				$result['redirect_url'] = $this->config( 'signup_path' );
+				if ( ! empty( $result['post_vars']['sub_request'] ) )
+				{
+					$result['redirect_url'] = $result['redirect_url'] . $result['post_vars']['sub_request'] . '/';
+				}
 				$result['error'] = urlencode( $return->get_error_message() );
 			}//end else
 		}//end if
@@ -429,10 +464,22 @@ class GO_Subscriptions
 	 */
 	public function subscription_form( $atts )
 	{
-		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
+		// check if we have any shortcode attributes
+		$atts = shortcode_atts( array( 'sub' => '' ), $atts );
+
+		if ( ! isset( $_GET['go-subscriptions'] ) )
+		{
+			$_GET['go-subscriptions'] = array();
+		}
+
+		if ( empty( $_GET['go-subscriptions']['sub_request'] ) )
+		{
+			$_GET['go-subscriptions']['sub_request'] = $atts['sub'];
+		}
 
 		$user = wp_get_current_user();
 
+		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
 		if (
 			0 >= $user->ID ||
 			empty( $user->user_email ) ||
