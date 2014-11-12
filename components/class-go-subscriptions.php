@@ -385,7 +385,7 @@ class GO_Subscriptions
 
 			if ( 0 < $duplicate_count )
 			{
-				$result['error'] = 'Advisory team name "' . $result['post_vars']['company'] . '" already taken.';
+				$result['error'] = 'An existing team has that name ("' . $result['post_vars']['company'] . '"). Please enter a unique team name to differentiate your team.';
 				return $result;
 			}
 
