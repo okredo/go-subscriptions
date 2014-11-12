@@ -856,8 +856,7 @@ class GO_Subscriptions
 		// optionally, only log the user back in if the user was already just logged in
 		if ( $log_back_in )
 		{
-			$fresh_user = wp_get_current_user();
-			if ( $current_user && $current_user->ID === $fresh_user->ID )
+			if ( $current_user && $current_user->ID === $user_id )
 			{
 				// they were logged in when signing up, they were redirected
 				// here and the ID matches.  Safe to login.
