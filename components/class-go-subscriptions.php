@@ -424,12 +424,10 @@ class GO_Subscriptions
 	/**
 	 * the handler for "go_subscriptions_subscription_form" shortcode.
 	 *
-	 * @TODO verify that we don't actually get these params
-	 * @param array $user a user array whose 'obj' element is a WP_User object
 	 * @param array $atts attributes needed by the form
 	 * @return string the subscription form
 	 */
-	public function subscription_form( $user, $atts )
+	public function subscription_form( $atts )
 	{
 		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
 
@@ -441,7 +439,8 @@ class GO_Subscriptions
 			! user_can( $user, 'subscriber' )
 		)
 		{
-			// we don't have a user yet, but we may have an email for a non-subscriber
+			// we don't have a user yet, but we may have an email for
+			// a non-subscriber
 			if (
 				! empty( $_GET['go-subscriptions']['email'] ) &&
 				isset( $_GET['go-subscriptions']['is_subscriber'] ) &&
