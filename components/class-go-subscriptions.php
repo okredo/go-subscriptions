@@ -836,7 +836,7 @@ class GO_Subscriptions
 	 * @param $subscription array details about the new subscription
 	 * @param $log_back_in bool to determine if should log back in after wp_set_password()
 	 */
-	public function send_welcome_email( $user_id, $subscription, $log_back_in = FALSE )
+	public function send_welcome_email( $user_id, $subscription )
 	{
 		$user = get_user_by( 'id', $user_id );
 
@@ -846,23 +846,10 @@ class GO_Subscriptions
 			return;
 		}
 
-		$current_user = wp_get_current_user();
-
 		// generate a password for new users
 		$password = wp_generate_password( 8, false );
 		// note: wp_set_password will clear the user cache and result in the current logged in user being logged out.
 		wp_set_password( $password, $user_id );
-
-		// optionally, only log the user back in if the user was already just logged in
-		if ( $log_back_in )
-		{
-			if ( $current_user && $current_user->ID === $user_id )
-			{
-				// they were logged in when signing up, they were redirected
-				// here and the ID matches.  Safe to login.
-				go_subscriptions()->login_user( $current_user->ID, TRUE );
-			}
-		}
 
 		switch_to_blog( $this->config( 'subscriptions_blog_id' ) ); // make sure our urls go to research
 
