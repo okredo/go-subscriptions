@@ -374,22 +374,11 @@ class GO_Subscriptions
 			}
 
 			// the advisory name must not already exist (as a go-enterprise)
-			// using $wpdb to avoid a blog switch
-			global $wpdb;
-			$duplicate_count = $wpdb->get_var( $wpdb->prepare(
-				'SELECT COUNT(*)
-				 FROM wp_' . $this->config( 'accounts_blog_id' ) . '_posts
-				 WHERE post_type = "go-enterprise" AND post_status = "publish" AND post_title = %s',
-				$result['post_vars']['company']
-			) );
-
-			if ( 0 < $duplicate_count )
+			if ( $enterprise_post = get_page_by_path( sanitize_title( $result['post_vars']['company'] ), 'OBJECT', 'go-enterprise' ) )
 			{
 				$result['error'] = 'An existing team has that name ("' . $result['post_vars']['company'] . '"). Please enter a unique team name to differentiate your team.';
 				return $result;
 			}
-
-			// @TODO create an advisory enterprise
 		}//END if
 
 		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
@@ -442,6 +431,10 @@ class GO_Subscriptions
 			$this->login_user( $return );
 
 			$result['user'] = get_user_by( 'id', $return );
+
+			// fire the go_subscriptions_created_guest_user filter
+			// to give go-advisories a chance to create a new advisory post
+			apply_filters( 'go_subscriptions_created_guest_user', NULL, $result['user'], $result['post_vars'] );
 
 			if ( empty( $result['post_vars']['redirect_url'] ) )
 			{
