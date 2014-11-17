@@ -436,14 +436,30 @@ class GO_Subscriptions
 			// to give go-advisories a chance to create a new advisory post
 			apply_filters( 'go_subscriptions_created_guest_user', NULL, $result['user'], $result['post_vars'] );
 
-			if ( empty( $result['post_vars']['redirect_url'] ) )
+			// send advisory member who're not subscribers yet to the step-2
+			// CC form
+			if ( current_user_can( 'go_advisories_owner' ) && ! current_user_can( 'subscriber-advisory' ) )
 			{
-				$result['redirect_url'] = $this->config( 'thankyou_path' );
-			}
+				if ( empty( $result['post_vars']['redirect_url'] ) )
+				{
+					$result['redirect_url'] = $this->config( 'subscription_path' );
+				}
+				else
+				{
+					$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'subscription_path' ) );
+				}
+			}//END if
 			else
 			{
-				$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'thankyou_path' ) );
-			}
+				if ( empty( $result['post_vars']['redirect_url'] ) )
+				{
+					$result['redirect_url'] = $this->config( 'thankyou_path' );
+				}
+				else
+				{
+					$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'thankyou_path' ) );
+				}
+			}//END else
 		}//end else
 
 		return $result;
@@ -1115,7 +1131,7 @@ class GO_Subscriptions
 	/**
 	 * hooked to the site_option_welcome_user_email filter to alter the welcome email
 	 */
-	public function site_option_welcome_user_email( $text )
+	public function site_option_welcome_user_email( $unused_text )
 	{
 		return $this->config( 'welcome_user_email_text' );
 	}//end site_option_welcome_user_email
