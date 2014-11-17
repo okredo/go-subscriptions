@@ -15,6 +15,7 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 	if ( ! isset( $template_variables['email'] ) || empty( $template_variables['email'] ) )
 	{
 		$template_variables['email'] = $current_user->user_email;
+		$disable_email_input = TRUE;
 	}
 
 	// conditionally populate company field
@@ -57,7 +58,9 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 			<ul>
 				<li class="field-container email required">
 					<label for="email">Email address</label>
-					<input type="email" name="go-subscriptions[email]" value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
+					<input type="email" name="go-subscriptions[email]" value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"
+						<?php echo ( TRUE === $disable_email_input ) ? esc_attr( 'disabled' ) : ''; ?>
+					/>
 				</li>
 				<li class="field-container company <?php echo $is_advisory_signup ? 'required' : ''; ?>">
 					<label for="company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
