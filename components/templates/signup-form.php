@@ -7,6 +7,26 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 
 // company name is required for advisory subscriptions
 $is_advisory_signup = ! empty( $template_variables['sub_request'] ) && 'advisory' == $template_variables['sub_request'];
+
+// conditionally populate email and company fields if the user is logged in
+if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_user_logged_in() )
+{
+	$current_user = wp_get_current_user();
+	if ( ! isset( $template_variables['email'] ) || empty( $template_variables['email'] ) )
+	{
+		$template_variables['email'] = $current_user->user_email;
+	}
+
+	// conditionally populate company field
+	if ( ! isset( $template_variables['company'] ) || empty( $template_variables['company'] ) )
+	{
+		$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $current_user->ID );
+		if ( $profile_data['company'] )
+		{
+			$template_variables['company'] = $profile_data['company'];
+		}//END if
+	}//END if
+}//END if
 ?>
 
 <div class="go-subscriptions-signup clearfix">
