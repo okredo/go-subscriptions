@@ -432,9 +432,9 @@ class GO_Subscriptions
 
 			$result['user'] = get_user_by( 'id', $return );
 
-			// fire the go_subscriptions_created_guest_user filter
+			// fire the go_subscriptions_created_guest_user action
 			// to give go-advisories a chance to create a new advisory post
-			apply_filters( 'go_subscriptions_created_guest_user', NULL, $result['user'], $result['post_vars'] );
+			do_action( 'go_subscriptions_created_guest_user', $result['user'], $result['post_vars'] );
 
 			if ( empty( $result['post_vars']['redirect_url'] ) )
 			{
