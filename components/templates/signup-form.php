@@ -4,6 +4,9 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	go_sitelock()->lock_screen( 'Signing up for an account' );
 	return;
 }//end if
+
+// company name is required for advisory subscriptions
+$is_advisory_signup = ! empty( $template_variables['sub_request'] ) && 'advisory' == $template_variables['sub_request'];
 ?>
 
 <div class="go-subscriptions-signup clearfix">
@@ -11,7 +14,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 	if ( isset( $template_variables['error'] ) )
 	{
 		?>
-		<div class="go-signup-error"><?php echo $template_variables['error'];?></div>
+		<div class="go-signup-error"><?php echo stripslashes( urldecode( $template_variables['error'] ) );?></div>
 		<?php
 	}// end if
 
@@ -28,17 +31,19 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 			<input type="hidden" name="go-subscriptions[converted_vertical]" value="<?php echo isset( $template_variables['converted_vertical'] ) ? esc_attr( $template_variables['converted_vertical'] ) : '';?>" />
 			<input type="hidden" name="go-subscriptions[redirect]" value="<?php echo esc_attr( $template_variables['redirect'] );?>" />
 			<input type="hidden" name="go-subscriptions[referring_url]" value="<?php echo isset( $template_variables['referring_url'] ) ? esc_url( $template_variables['referring_url'] ) : '';?>" />
+			<input type="hidden" name="go-subscriptions[sub_request]" value="<?php echo esc_attr( $template_variables['sub_request'] );?>" />
 			<?php wp_nonce_field( 'go_subscriptions_signup' ); ?>
 
 			<ul>
-				<li class="field-container email">
+				<li class="field-container email required">
 					<label for="email">Email address</label>
 					<input type="email" name="go-subscriptions[email]" value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
 				</li>
-				<li class="field-container company">
-					<label for="company">Company name</label>
+				<li class="field-container company <?php echo $is_advisory_signup ? 'required' : ''; ?>">
+					<label for="company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
 					<input type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
 				</li>
+				<!-- hidden by CSS for now -->
 				<li class="field-container title">
 					<label for="title">Title</label>
 					<input type="text" name="go-subscriptions[title]" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
