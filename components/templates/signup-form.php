@@ -8,7 +8,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 // company name is required for advisory subscriptions
 $is_advisory_signup = ! empty( $template_variables['sub_request'] ) && 'advisory' == $template_variables['sub_request'];
 
-// conditionally populate email and company fields if the user is logged in
+// conditionally populate email and company fields if a guest user is logged in and on the advisory sign-up form
 if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_user_logged_in() )
 {
 	$current_user = wp_get_current_user();
@@ -17,7 +17,6 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 		$template_variables['email'] = $current_user->user_email;
 	}
 
-	// conditionally populate company field
 	if ( ! isset( $template_variables['company'] ) || empty( $template_variables['company'] ) )
 	{
 		$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $current_user->ID );
@@ -44,7 +43,7 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 	}
 	?>
 	<div id="form-wrapper">
-		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo $template_variables['ajax_url']; ?>">
+		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo esc_attr( $template_variables['ajax_url'] ); ?>">
 			<input type="hidden" name="action" value="go-subscriptions-signup" />
 			<input type="hidden" name="go-subscriptions[form_id]" value="<?php echo esc_attr( $template_variables['form_id'] );?>" />
 			<input type="hidden" name="go-subscriptions[converted_post_id]" value="<?php echo isset( $template_variables['converted_post_id'] ) ? absint( $template_variables['converted_post_id'] ) : '';?>" />
@@ -57,11 +56,12 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 			<ul>
 				<li class="field-container email required">
 					<label for="email">Email address</label>
-					<input type="email" name="go-subscriptions[email]" value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"
-						<?php echo ! empty( $template_variables['email'] ) ? esc_attr( 'disabled' ) : ''; ?>
-					/>
+					<input <?php echo ! isset( $template_variables['email'] ) || ! empty( $template_variables['email'] ) ? esc_attr( 'readonly' ) : ''; ?>
+						type="email"
+						name="go-subscriptions[email]"
+						value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
 				</li>
-				<li class="field-container company <?php echo $is_advisory_signup ? 'required' : ''; ?>">
+				<li class="field-container company <?php echo $is_advisory_signup ? esc_attr( 'required' ) : ''; ?>">
 					<label for="company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
 					<input type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
 				</li>
