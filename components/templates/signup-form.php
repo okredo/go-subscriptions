@@ -63,8 +63,8 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 					<?php
 					if ( $is_advisory_signup )
 					{
+					// email domain notification bumpdown message
 					?>
-					<!-- email domain notification bumpdown message -->
 					<button id="email-domain-alert" class="button link" style="display:none;"></button>
 					<div class="hide boxed" data-trigger="email-domain-alert">
 						<span class="bumpdown-arrow" style="left: 232px;"></span>
