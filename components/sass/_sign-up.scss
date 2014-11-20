@@ -180,6 +180,10 @@
 	.go-radio:checked + span:before {
 		top: -4px;
 	}
+	.go-radio:checked + span:after {
+		top: 0;
+		left: -15px;
+	}
 
 	.go-radio-title {
 		color: #adafb1;
