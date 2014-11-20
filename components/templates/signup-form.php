@@ -60,6 +60,21 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 						type="email"
 						name="go-subscriptions[email]"
 						value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
+					<?php
+					if ( $is_advisory_signup )
+					{
+						// email domain notification bumpdown message
+						?>
+						<button id="email-domain-alert" class="button link"></button>
+						<div class="hide boxed" data-trigger="email-domain-alert">
+							<span class="bumpdown-arrow"></span>
+							<a class="bumpdown-close" title="Close"><i class="goicon icon-x"></i></a>
+							<h1>About Consumer Email Addresses</h1>
+							<p id="email-domain-alert-msg"></p>
+						</div>
+						<?php
+						}//END if
+					?>
 				</li>
 				<li class="field-container company <?php echo $is_advisory_signup ? esc_attr( 'required' ) : ''; ?>">
 					<label for="company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
