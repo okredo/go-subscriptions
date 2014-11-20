@@ -65,9 +65,9 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 					{
 						// email domain notification bumpdown message
 						?>
-						<button id="email-domain-alert" class="button link" style="display:none;"></button>
+						<button id="email-domain-alert" class="button link"></button>
 						<div class="hide boxed" data-trigger="email-domain-alert">
-							<span class="bumpdown-arrow" style="left: 232px;"></span>
+							<span class="bumpdown-arrow"></span>
 							<a class="bumpdown-close" title="Close"><i class="goicon icon-x"></i></a>
 							<h1>About Consumer Email Addresses</h1>
 							<p id="email-domain-alert-msg"></p>
