@@ -55,21 +55,23 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 
 			<ul>
 				<li class="field-container email required">
-					<label for="email">Email address</label>
+					<label for="go-subscriptions-email">Email address</label>
 					<input <?php echo ! isset( $template_variables['email'] ) || ! empty( $template_variables['email'] ) ? esc_attr( 'readonly' ) : ''; ?>
+						id="go-subscriptions-email"
 						type="email"
 						name="go-subscriptions[email]"
 						value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
 				</li>
 				<li class="field-container company <?php echo $is_advisory_signup ? 'required' : ''; ?>">
-					<label for="company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
-					<input type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
+					<label for="go-subscriptions-company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
+					<input id="go-subscriptions-company" type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
 				</li>
 				<!-- hidden by CSS for now -->
 				<li class="field-container title">
-					<label for="title">Title</label>
-					<input type="text" name="go-subscriptions[title]" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
+					<label for="go-subscriptions-title">Title</label>
+					<input id="go-subscriptions-title" type="text" name="go-subscriptions[title]" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
 				</li>
+			</ul>
 				<?php
 				// payment option
 				if ( $is_advisory_signup )
@@ -87,7 +89,6 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 				<?php
 				}//END if
 				?>
-			</ul>
 
 			<div class="well">
 				<button class="button primary" type="submit">Continue</button>
