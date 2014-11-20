@@ -167,6 +167,15 @@
 	.skip-to-login {
 		display: none;
 	}
+
+	// slightly better centering of highlighted checkbox
+	.go-radio:checked + span:before {
+		top: -4px;
+	}
+
+	.go-radio-title {
+		color: #adafb1;
+	}
 }
 
 .go-signup-error {
