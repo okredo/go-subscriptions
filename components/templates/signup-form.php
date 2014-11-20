@@ -63,17 +63,17 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 					<?php
 					if ( $is_advisory_signup )
 					{
-					// email domain notification bumpdown message
-					?>
-					<button id="email-domain-alert" class="button link" style="display:none;"></button>
-					<div class="hide boxed" data-trigger="email-domain-alert">
-						<span class="bumpdown-arrow" style="left: 232px;"></span>
-						<a class="bumpdown-close" title="Close"><i class="goicon icon-x"></i></a>
-						<h1>About Consumer Email Addresses</h1>
-						<p id="email-domain-alert-msg"></p>
-					</div>
-					<?php
-					}
+						// email domain notification bumpdown message
+						?>
+						<button id="email-domain-alert" class="button link" style="display:none;"></button>
+						<div class="hide boxed" data-trigger="email-domain-alert">
+							<span class="bumpdown-arrow" style="left: 232px;"></span>
+							<a class="bumpdown-close" title="Close"><i class="goicon icon-x"></i></a>
+							<h1>About Consumer Email Addresses</h1>
+							<p id="email-domain-alert-msg"></p>
+						</div>
+						<?php
+						}
 					?>
 				</li>
 				<li class="field-container company <?php echo $is_advisory_signup ? esc_attr( 'required' ) : ''; ?>">
