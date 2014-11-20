@@ -55,8 +55,9 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 
 			<ul>
 				<li class="field-container email required">
-					<label for="email">Email address</label>
+					<label for="go-subscriptions-email">Email address</label>
 					<input <?php echo ! isset( $template_variables['email'] ) || ! empty( $template_variables['email'] ) ? esc_attr( 'readonly' ) : ''; ?>
+						id="go-subscriptions-email"
 						type="email"
 						name="go-subscriptions[email]"
 						value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
@@ -76,16 +77,33 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 						}//END if
 					?>
 				</li>
-				<li class="field-container company <?php echo $is_advisory_signup ? esc_attr( 'required' ) : ''; ?>">
-					<label for="company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
-					<input type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
+				<li class="field-container company <?php echo $is_advisory_signup ? 'required' : ''; ?>">
+					<label for="go-subscriptions-company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
+					<input id="go-subscriptions-company" type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
 				</li>
 				<!-- hidden by CSS for now -->
 				<li class="field-container title">
-					<label for="title">Title</label>
-					<input type="text" name="go-subscriptions[title]" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
+					<label for="go-subscriptions-title">Title</label>
+					<input id="go-subscriptions-title" type="text" name="go-subscriptions[title]" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
 				</li>
 			</ul>
+				<?php
+				// payment option
+				if ( $is_advisory_signup )
+				{
+				?>
+					<span class="go-radio-title">Payment options:</span>
+					<label for="annual-payment-plan">
+						<input type="radio" class="go-radio" name="go-subscriptions[payment_plan]" id="annual-payment-plan" value="annual" checked>
+						<span>One payment of $4999.00 per year</span>
+					</label>
+					<label for="monthly-payment-plan">
+						<input type="radio" class="go-radio" name="go-subscriptions[payment_plan]" id="monthly-payment-plan" value="monthly">
+						<span>12 payments of $500.00 per year</span>
+					</label>
+				<?php
+				}//END if
+				?>
 
 			<div class="well">
 				<button class="button primary" type="submit">Continue</button>
