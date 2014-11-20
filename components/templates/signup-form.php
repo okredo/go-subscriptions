@@ -73,7 +73,7 @@ if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_u
 							<p id="email-domain-alert-msg"></p>
 						</div>
 						<?php
-						}
+						}//END if
 					?>
 				</li>
 				<li class="field-container company <?php echo $is_advisory_signup ? esc_attr( 'required' ) : ''; ?>">
