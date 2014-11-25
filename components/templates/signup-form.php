@@ -95,7 +95,7 @@ if ( $is_advisory_signup && current_user_can( 'signup_advisory' ) && is_user_log
 					<span class="go-radio-title">Payment options:</span>
 					<label for="annual-payment-plan">
 						<input type="radio" class="go-radio" name="go-subscriptions[payment_plan]" id="annual-payment-plan" value="advisory-annual" checked>
-						<span>One payment of $4999 per year</span>
+						<span>One payment of $5000 per year</span>
 					</label>
 					<label for="monthly-payment-plan">
 						<input type="radio" class="go-radio" name="go-subscriptions[payment_plan]" id="monthly-payment-plan" value="advisory-monthly">
