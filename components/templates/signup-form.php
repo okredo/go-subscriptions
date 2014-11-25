@@ -9,7 +9,7 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 $is_advisory_signup = ! empty( $template_variables['sub_request'] ) && 'advisory' == $template_variables['sub_request'];
 
 // conditionally populate email and company fields if a guest user is logged in and on the advisory sign-up form
-if ( $is_advisory_signup && ! current_user_can( 'go_advisories_member' ) && is_user_logged_in() )
+if ( $is_advisory_signup && current_user_can( 'signup_advisory' ) && is_user_logged_in() )
 {
 	$current_user = wp_get_current_user();
 	if ( ! isset( $template_variables['email'] ) || empty( $template_variables['email'] ) )
