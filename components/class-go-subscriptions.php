@@ -395,8 +395,8 @@ class GO_Subscriptions
 
 		if ( is_wp_error( $return ) )
 		{
-			// we shouldn't be in here since we already checked for the
-			// existence of the email entered in our system, but...
+			// we could be in here if a guest or individual user is upgrading
+			// to an advisory subscription
 			if ( 'email-exists' == $return->get_error_code() )
 			{
 				// we are OK to redirect to the CC capture, the user has an
@@ -414,6 +414,14 @@ class GO_Subscriptions
 
 				$result['post_vars']['email'] = $result['user']->user_email;
 				$result['post_vars']['is_subscriber'] = FALSE; // tags the user as a non-subscriber
+
+				// is this an upgrade to an advisory subscription?
+				if ( ! empty( $result['post_vars']['sub_request'] ) && 'advisory' == $result['post_vars']['sub_request'] )
+				{
+					// fire the go_subscriptions_created_guest_user action
+					// to give go-advisories a chance to create a new advisory post
+					do_action( 'go_subscriptions_created_guest_user', $result['user'], $result['post_vars'] );
+				}
 			}//end if
 			else
 			{
