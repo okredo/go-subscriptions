@@ -405,7 +405,11 @@ class GO_Subscriptions
 
 				// if the user already has an account with an active
 				// subscription, or is an admin, redirect to the sign-in page
-				if ( $result['user']->ID && $result['user']->has_cap( 'subscriber' ) )
+				if (
+					$result['user']->ID &&
+					$result['user']->has_cap( 'subscriber' ) &&
+					empty( $result['post_vars']['sub_request'] )
+				)
 				{
 					$result['error'] = 'Email already linked to a subscription';
 					$result['redirect_url'] = $this->config( 'signin_url' ) . '?action=lostpassword&has_subscription';
@@ -413,7 +417,7 @@ class GO_Subscriptions
 				}//end if
 
 				$result['post_vars']['email'] = $result['user']->user_email;
-				$result['post_vars']['is_subscriber'] = FALSE; // tags the user as a non-subscriber
+				$result['post_vars']['is_subscriber'] = $result['user']->has_cap( 'subscriber' );
 
 				// is this an upgrade to an advisory subscription?
 				if ( ! empty( $result['post_vars']['sub_request'] ) && 'advisory' == $result['post_vars']['sub_request'] )
@@ -496,7 +500,6 @@ class GO_Subscriptions
 
 		$user = wp_get_current_user();
 
-		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
 		if (
 			0 >= $user->ID ||
 			empty( $user->user_email ) ||
@@ -513,11 +516,79 @@ class GO_Subscriptions
 			{
 				$user = get_user_by( 'email', $_GET['go-subscriptions']['email'] );
 			}
-
-			$form = $this->signup_form( $_GET );
 		}//END if
 
-		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
+		$form = $this->signup_form( $_GET ); // step-1 signup form
+		$skip_filter = FALSE;
+
+		// we track user roles on Accounts
+		switch_to_blog( $this->config( 'accounts_blog_id' ) );
+
+		// if this is a request from the corporate purchase page, we may
+		// have to alert the user if the requested subscription plan is at
+		// or below the user's current subscription level
+		// @TODO this whole block can probably be refactored and simplified
+		if ( is_user_logged_in() && ! empty( $_GET['landing-page'] ) )
+		{
+			if ( empty( $_GET['go-subscriptions']['sub_request'] ) )
+			{
+				// requested basic free plan but already birdied
+				if ( user_can( $user->ID, 'guest-prospect' ) )
+				{
+					$form = $this->config( 'basic_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+				elseif ( user_can( $user->ID, 'subscriber' ) )
+				{
+					$skip_filter = TRUE;
+
+					if ( user_can( $user->ID, 'subscriber-advisory' ) )
+					{
+						$form = $this->config( 'advisory_plan_redux_message' );
+					}
+					elseif ( user_can( $user->ID, 'subscriber-enterprise' ) )
+					{
+						$form = $this->config( 'corporate_plan_redux_message' );
+					}
+					else
+					{
+						$form = $this->config( 'individual_plan_redux_message' );
+					}
+				}//END elseif
+			}
+			elseif ( 'individual' == $_GET['go-subscriptions']['sub_request'] )
+			{
+				// requested individual plan but already an individual sub
+				//  but not an advisory or enterprise subscriber
+				if (
+					user_can( $user->ID, 'subscriber' ) &&
+					! user_can( $user->ID, 'subscriber-advisory' ) &&
+					! user_can( $user->ID, 'subscriber-enterprise' )
+				)
+				{
+					$form = $this->config( 'individual_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+				else
+				{
+				}
+			}
+			elseif ( 'advisory' == $_GET['go-subscriptions']['sub_request'] )
+			{
+				// requested advisory plan but already an advisory subscriber
+				// requested individual plan but already an enterprise
+				// or advisory subscriber
+				if ( user_can( $user->ID, 'subscriber-advisory' ) )
+				{
+					$form = $this->config( 'advisory_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+			}
+		}//END if
+
+		restore_current_blog();
+
+		return $skip_filter ? $form : apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
 	}//end subscription_form
 
 	/**
