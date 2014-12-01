@@ -555,35 +555,46 @@ class GO_Subscriptions
 						$form = $this->config( 'individual_plan_redux_message' );
 					}
 				}//END elseif
-			}
+			}//END if
 			elseif ( 'individual' == $_GET['go-subscriptions']['sub_request'] )
 			{
-				// requested individual plan but already an individual sub
-				//  but not an advisory or enterprise subscriber
-				if (
-					user_can( $user->ID, 'subscriber' ) &&
-					! user_can( $user->ID, 'subscriber-advisory' ) &&
-					! user_can( $user->ID, 'subscriber-enterprise' )
-				)
+				// requested individual plan but already an individual,
+				// advisory, or a corporate subscriber
+				$skip_filter = TRUE;
+				if ( user_can( $user->ID, 'subscriber' ) )
 				{
-					$form = $this->config( 'individual_plan_redux_message' );
-					$skip_filter = TRUE;
-				}
-				else
-				{
-				}
-			}
+					if (
+						! user_can( $user->ID, 'subscriber-advisory' ) &&
+						! user_can( $user->ID, 'subscriber-enterprise' )
+					)
+					{
+						$form = $this->config( 'individual_plan_redux_message' );
+					}
+					elseif ( user_can( $user->ID, 'subscriber-advisory' ) )
+					{
+						$form = $this->config( 'advisory_plan_redux_message' );
+					}
+					elseif ( user_can( $user->ID, 'subscriber-enterprise' ) )
+					{
+						$form = $this->config( 'corporate_plan_redux_message' );
+					}
+				}//END if
+			}//END elseif
 			elseif ( 'advisory' == $_GET['go-subscriptions']['sub_request'] )
 			{
-				// requested advisory plan but already an advisory subscriber
-				// requested individual plan but already an enterprise
-				// or advisory subscriber
+				// requested advisory plan but already an advisory or
+				// corporate subscriber
 				if ( user_can( $user->ID, 'subscriber-advisory' ) )
 				{
 					$form = $this->config( 'advisory_plan_redux_message' );
 					$skip_filter = TRUE;
 				}
-			}
+				elseif ( user_can( $user->ID, 'subscriber-enterprise' ) )
+				{
+					$form = $this->config( 'corporate_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+			}//END elseif
 		}//END if
 
 		restore_current_blog();
