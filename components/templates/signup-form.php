@@ -8,8 +8,9 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 // company name is required for advisory subscriptions
 $is_advisory_signup = ! empty( $template_variables['sub_request'] ) && 'advisory' == $template_variables['sub_request'];
 
-// conditionally populate email and company fields if a guest user is logged in and on the advisory sign-up form
-if ( $is_advisory_signup && current_user_can( 'signup_advisory' ) && is_user_logged_in() )
+// conditionally populate email and company fields if a guest user is logged
+// in and on the sign-up form
+if ( is_user_logged_in() )
 {
 	$current_user = wp_get_current_user();
 	if ( ! isset( $template_variables['email'] ) || empty( $template_variables['email'] ) )
@@ -56,7 +57,7 @@ if ( $is_advisory_signup && current_user_can( 'signup_advisory' ) && is_user_log
 			<ul>
 				<li class="field-container email required">
 					<label for="go-subscriptions-email">Email address</label>
-					<input <?php echo ! isset( $template_variables['email'] ) || ! empty( $template_variables['email'] ) ? esc_attr( 'readonly' ) : ''; ?>
+					<input <?php echo ! empty( $template_variables['email'] ) ? 'readonly class="readonly"' : ''; ?>
 						id="go-subscriptions-email"
 						type="email"
 						name="go-subscriptions[email]"
