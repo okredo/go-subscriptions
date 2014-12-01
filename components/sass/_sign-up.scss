@@ -178,11 +178,15 @@
 
 	// slightly better centering of highlighted checkbox
 	.go-radio:checked + span:before {
-		top: -4px;
+		top: -3px;
 	}
 
 	.go-radio-title {
 		color: #adafb1;
+	}
+
+	.readonly {
+		color: #aaaaaa;
 	}
 }
 
