@@ -528,7 +528,7 @@ class GO_Subscriptions
 		// have to alert the user if the requested subscription plan is at
 		// or below the user's current subscription level
 		// @TODO this whole block can probably be refactored and simplified
-		if ( is_user_logged_in() && ! empty( $_GET['landing-page'] ) )
+		if ( is_user_logged_in() )
 		{
 			if ( empty( $_GET['go-subscriptions']['sub_request'] ) )
 			{
