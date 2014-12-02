@@ -560,9 +560,9 @@ class GO_Subscriptions
 			{
 				// requested individual plan but already an individual,
 				// advisory, or a corporate subscriber
-				$skip_filter = TRUE;
 				if ( user_can( $user->ID, 'subscriber' ) )
 				{
+					$skip_filter = TRUE;
 					if (
 						! user_can( $user->ID, 'subscriber-advisory' ) &&
 						! user_can( $user->ID, 'subscriber-enterprise' )
