@@ -177,8 +177,21 @@
 	}
 
 	// slightly better centering of highlighted checkbox
-	.go-radio:checked + span:before {
-		top: -3px;
+	label[for=annual-payment-plan],
+	label[for=monthly-payment-plan] {
+		margin-bottom: 0;
+	}
+
+	.go-radio:checked + span:after {
+		left: 0px;
+	}
+
+	.firefox & .go-radio:checked + span:after {
+		left: -1px;
+	}
+
+	.go-radio + span {
+		line-height: 1.28571em;
 	}
 
 	.go-radio-title {
