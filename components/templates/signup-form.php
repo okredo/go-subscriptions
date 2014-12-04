@@ -44,14 +44,14 @@ if ( is_user_logged_in() )
 	}
 	?>
 	<div id="form-wrapper">
-		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo esc_attr( $template_variables['ajax_url'] ); ?>">
+		<form id="go-subscriptions-signup" class="boxed" method="post" action="<?php echo esc_url( $template_variables['ajax_url'] ); ?>">
 			<input type="hidden" name="action" value="go-subscriptions-signup" />
-			<input type="hidden" name="go-subscriptions[form_id]" value="<?php echo esc_attr( $template_variables['form_id'] );?>" />
-			<input type="hidden" name="go-subscriptions[converted_post_id]" value="<?php echo isset( $template_variables['converted_post_id'] ) ? absint( $template_variables['converted_post_id'] ) : '';?>" />
-			<input type="hidden" name="go-subscriptions[converted_vertical]" value="<?php echo isset( $template_variables['converted_vertical'] ) ? esc_attr( $template_variables['converted_vertical'] ) : '';?>" />
-			<input type="hidden" name="go-subscriptions[redirect]" value="<?php echo esc_attr( $template_variables['redirect'] );?>" />
-			<input type="hidden" name="go-subscriptions[referring_url]" value="<?php echo isset( $template_variables['referring_url'] ) ? esc_url( $template_variables['referring_url'] ) : '';?>" />
-			<input type="hidden" name="go-subscriptions[sub_request]" value="<?php echo esc_attr( $template_variables['sub_request'] );?>" />
+			<input type="hidden" name="<?php echo esc_attr( $this->get_field_name( 'form_id' ) ); ?>" value="<?php echo esc_attr( $template_variables['form_id'] );?>" />
+			<input type="hidden" name="<?php echo esc_attr( $this->get_field_name( 'converted_post_id' ) ); ?>" value="<?php echo isset( $template_variables['converted_post_id'] ) ? absint( $template_variables['converted_post_id'] ) : '';?>" />
+			<input type="hidden" name="<?php echo esc_attr( $this->get_field_name( 'converted_vertical' ) ); ?>" value="<?php echo isset( $template_variables['converted_vertical'] ) ? esc_attr( $template_variables['converted_vertical'] ) : '';?>" />
+			<input type="hidden" name="<?php echo esc_attr( $this->get_field_name( 'redirect' ) ); ?>" value="<?php echo esc_url( $template_variables['redirect'] );?>" />
+			<input type="hidden" name="<?php echo esc_attr( $this->get_field_name( 'referring_url' ) ); ?>" value="<?php echo isset( $template_variables['referring_url'] ) ? esc_url( $template_variables['referring_url'] ) : '';?>" />
+			<input type="hidden" name="<?php echo esc_attr( $this->get_field_name( 'sub_request' ) ); ?>" value="<?php echo esc_attr( $template_variables['sub_request'] );?>" />
 			<?php wp_nonce_field( 'go_subscriptions_signup' ); ?>
 
 			<ul>
@@ -60,7 +60,7 @@ if ( is_user_logged_in() )
 					<input <?php echo ! empty( $template_variables['email'] ) ? 'readonly class="readonly"' : ''; ?>
 						id="go-subscriptions-email"
 						type="email"
-						name="go-subscriptions[email]"
+						name="<?php echo esc_attr( $this->get_field_name( 'email' ) ); ?>"
 						value="<?php echo isset( $template_variables['email'] ) ? esc_attr( $template_variables['email'] ) : ''; ?>"/>
 					<?php
 					if ( $is_advisory_signup )
@@ -75,37 +75,36 @@ if ( is_user_logged_in() )
 							<p id="email-domain-alert-msg"></p>
 						</div>
 						<?php
-						}//END if
+					}//END if
 					?>
 				</li>
 				<li class="field-container company <?php echo $is_advisory_signup ? 'required' : ''; ?>">
 					<label for="go-subscriptions-company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
-					<input id="go-subscriptions-company" type="text" name="go-subscriptions[company]" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
+					<input id="go-subscriptions-company" type="text" name="<?php echo esc_attr( $this->get_field_name( 'company' ) ); ?>" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
 				</li>
 				<!-- hidden by CSS for now -->
 				<li class="field-container title">
 					<label for="go-subscriptions-title">Title</label>
-					<input id="go-subscriptions-title" type="text" name="go-subscriptions[title]" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
+					<input id="go-subscriptions-title" type="text" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" value="<?php echo isset( $template_variables['title'] ) ? esc_attr( $template_variables['title'] ) : ''; ?>" />
 				</li>
 			</ul>
 				<?php
 				// payment option
 				if ( $is_advisory_signup )
 				{
-				?>
+					?>
 					<span class="go-radio-title">Payment options:</span>
 					<label for="annual-payment-plan">
-						<input type="radio" class="go-radio" name="go-subscriptions[payment_plan]" id="annual-payment-plan" value="advisory-annual" checked>
-						<span>One payment of $5000 per year</span>
+						<input type="radio" class="go-radio" name="<?php echo esc_attr( $this->get_field_name( 'payment_plan' ) ); ?>" id="annual-payment-plan" value="advisory-annual" checked>
+						<span>One payment of <?php echo $template_variables['advisory_annual_cost']; ?> per year</span>
 					</label>
 					<label for="monthly-payment-plan">
-						<input type="radio" class="go-radio" name="go-subscriptions[payment_plan]" id="monthly-payment-plan" value="advisory-monthly">
-						<span>12 payments of $500 per month</span>
+						<input type="radio" class="go-radio" name="<?php echo esc_attr( $this->get_field_name( 'payment_plan' ) ); ?>" id="monthly-payment-plan" value="advisory-monthly">
+						<span>12 payments of <?php echo $template_variables['advisory_monthly_cost']; ?> per month</span>
 					</label>
-				<?php
+					<?php
 				}//END if
 				?>
-
 			<div class="well">
 				<button class="button primary" type="submit">Continue</button>
 			</div>
@@ -132,4 +131,3 @@ if ( is_user_logged_in() )
 		<a href="<?php echo wp_login_url(); ?>" class="sign-in-link sign-in">Sign in</a> now.
 	</header>
 </div>
-

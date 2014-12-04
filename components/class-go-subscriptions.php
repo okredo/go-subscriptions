@@ -2,6 +2,7 @@
 
 class GO_Subscriptions
 {
+	public $id_base = 'go-subscriptions';
 	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
 	public $signin_message_key = 'go-subscriptions-sign-in-message';
@@ -257,6 +258,9 @@ class GO_Subscriptions
 			$default_arr['title'] = isset( $profile_data['title'] ) ? $profile_data['title'] : '';
 		}
 
+		$arr['advisory_annual_cost'] = $this->config( 'advisory_annual_cost' );
+		$arr['advisory_monthly_cost'] = $this->config( 'advisory_monthly_cost' );
+
 		// we'll take only non-empty values from $arr. rest will be filled
 		// with values from $dafault_arr
 		$arr = array_merge( $default_arr, array_filter( $arr ) );
@@ -432,7 +436,7 @@ class GO_Subscriptions
 				$result['redirect_url'] = $this->config( 'signup_path' );
 				if ( ! empty( $result['post_vars']['sub_request'] ) )
 				{
-					$result['redirect_url'] = $result['redirect_url'] . $result['post_vars']['sub_request'] . '/';
+					$result['redirect_url'] = esc_url_raw( $result['redirect_url'] . $result['post_vars']['sub_request'] . '/' );
 				}
 				$result['error'] = urlencode( $return->get_error_message() );
 			}//end else
@@ -450,7 +454,7 @@ class GO_Subscriptions
 
 			// send advisory member who're not subscribers yet to the step-2
 			// CC form
-			if ( current_user_can( 'go_advisories_owner' ) && ! current_user_can( 'subscriber-advisory' ) )
+			if ( current_user_can( 'moderate_advisory_team' ) && ! current_user_can( 'subscriber-advisory' ) )
 			{
 				if ( empty( $result['post_vars']['redirect_url'] ) )
 				{
@@ -533,20 +537,20 @@ class GO_Subscriptions
 			if ( empty( $_GET['go-subscriptions']['sub_request'] ) )
 			{
 				// requested basic free plan but already birdied
-				if ( user_can( $user->ID, 'guest-prospect' ) )
+				if ( user_can( $user, 'guest-prospect' ) )
 				{
 					$form = $this->config( 'basic_plan_redux_message' );
 					$skip_filter = TRUE;
 				}
-				elseif ( user_can( $user->ID, 'subscriber' ) )
+				elseif ( user_can( $user, 'subscriber' ) )
 				{
 					$skip_filter = TRUE;
 
-					if ( user_can( $user->ID, 'subscriber-advisory' ) )
+					if ( user_can( $user, 'subscriber-advisory' ) )
 					{
 						$form = $this->config( 'advisory_plan_redux_message' );
 					}
-					elseif ( user_can( $user->ID, 'subscriber-enterprise' ) )
+					elseif ( user_can( $user, 'subscriber-enterprise' ) )
 					{
 						$form = $this->config( 'corporate_plan_redux_message' );
 					}
@@ -560,21 +564,21 @@ class GO_Subscriptions
 			{
 				// requested individual plan but already an individual,
 				// advisory, or a corporate subscriber
-				if ( user_can( $user->ID, 'subscriber' ) )
+				if ( user_can( $user, 'subscriber' ) )
 				{
 					$skip_filter = TRUE;
 					if (
-						! user_can( $user->ID, 'subscriber-advisory' ) &&
-						! user_can( $user->ID, 'subscriber-enterprise' )
+						! user_can( $user, 'subscriber-advisory' ) &&
+						! user_can( $user, 'subscriber-enterprise' )
 					)
 					{
 						$form = $this->config( 'individual_plan_redux_message' );
 					}
-					elseif ( user_can( $user->ID, 'subscriber-advisory' ) )
+					elseif ( user_can( $user, 'subscriber-advisory' ) )
 					{
 						$form = $this->config( 'advisory_plan_redux_message' );
 					}
-					elseif ( user_can( $user->ID, 'subscriber-enterprise' ) )
+					elseif ( user_can( $user, 'subscriber-enterprise' ) )
 					{
 						$form = $this->config( 'corporate_plan_redux_message' );
 					}
@@ -584,12 +588,12 @@ class GO_Subscriptions
 			{
 				// requested advisory plan but already an advisory or
 				// corporate subscriber
-				if ( user_can( $user->ID, 'subscriber-advisory' ) )
+				if ( user_can( $user, 'subscriber-advisory' ) )
 				{
 					$form = $this->config( 'advisory_plan_redux_message' );
 					$skip_filter = TRUE;
 				}
-				elseif ( user_can( $user->ID, 'subscriber-enterprise' ) )
+				elseif ( user_can( $user, 'subscriber-enterprise' ) )
 				{
 					$form = $this->config( 'corporate_plan_redux_message' );
 					$skip_filter = TRUE;
@@ -896,7 +900,7 @@ class GO_Subscriptions
 			$args['class'] = 'button-' . $args['size'];
 		}
 
-		return $this->get_template_part( 'signup-button.php', $args );
+		return $this->get_template_patr( 'signup-button.php', $args );
 	}//end signup_button
 
 	/**
@@ -917,6 +921,17 @@ class GO_Subscriptions
 		// do shortcode makes sure that any shortcodes that are in the template get parsed.
 		return do_shortcode( $this->get_template_part( 'thanks.php', $atts ) );
 	}//end get_thankyou
+
+	/**
+	 * construct a (form) field name based on our plugin id
+	 *
+	 * @param string $name specific name of the field
+	 * @return the field name based on our $id_base and $name
+	 */
+	private function get_field_name( $name )
+	{
+		return $this->id_base . '[' . $name . ']';
+	}//END get_field_name
 
 	/**
 	 * Get the template part in an output buffer and return it
