@@ -112,9 +112,10 @@ if ( is_user_logged_in() )
 
 		<p>
 			<strong>Required</strong>
-			Your email address is your sign-in ID for Gigaom Research.
-			By continuing, you are agreeing to our <a href="http://gigaom.com/terms-of-service/">Terms of Service</a>
-			and <a href="http://gigaom.com/privacy-policy/">Privacy Policy</a>.
+			<?php echo apply_filters(
+				'go_subscriptions_signup_user_agreement',
+				'Your email address is your sign-in ID for Gigaom Research. By continuing, you are agreeing to our <a href="http://gigaom.com/terms-of-service/">Terms of Service</a> and <a href="http://gigaom.com/privacy-policy/">Privacy Policy</a>.',
+				$is_advisory_signup ) ?>
 		</p>
 	</div>
 
