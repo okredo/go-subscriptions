@@ -13,8 +13,6 @@ class GO_Subscriptions
 	private $protected_post_types = array(
 		'go-report',
 		'go-report-section',
-		'quarterly-wrap-up', // old report type
-		'sector-roadmap',    // old report type
 	);
 	private $filters = array(
 		'read_post',
@@ -808,12 +806,6 @@ class GO_Subscriptions
 		if ( isset( $all_caps['comment'] ) )
 		{
 			unset( $all_caps['comment'] );
-		}
-
-		// no commenting on webinars
-		if ( 'go-webinar' == $post->post_type )
-		{
-			return $all_caps;
 		}
 
 		// if comments are closed for the post, no comment cap for you!
