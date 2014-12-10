@@ -8,6 +8,8 @@ if ( apply_filters( 'go_site_locked', FALSE ) )
 // company name is required for advisory subscriptions
 $is_advisory_signup = ! empty( $template_variables['sub_request'] ) && 'advisory' == $template_variables['sub_request'];
 
+$is_individual_signup = ! empty( $template_variables['sub_request'] ) && 'individual' == $template_variables['sub_request'];
+
 // conditionally populate email and company fields if a guest user is logged
 // in and on the sign-up form
 if ( is_user_logged_in() )
@@ -122,8 +124,28 @@ if ( is_user_logged_in() )
 	<div id="marketing-box">
 		<?php include get_stylesheet_directory() . '/img/research.svg'; ?>
 		<div>
-			<h2>Register to gain access to <strong>any</strong> single report for <strong>free</strong>.</h2>
-			<p>When you register with Gigaom Research, you gain access to the full text of any report of your choosing. We also make other reports available from time to time available only to registered users. With over 200 independent analysts in our network, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
+			<?php if ( $is_advisory_signup )
+			{
+				?>
+				<h2>Access to Gigaom Research and Analyst Inquiries for your entire team.</h2>
+				<p>When you sign up for a Gigaom Research Advisory plan you get unlimited full text access to Gigaom Research for up to five team members and four Analyst Inquiries for customized, in-depth analysis you need to succeed.</p>
+				<?php
+			}
+			elseif ( $is_individual_signup )
+			{
+				?>
+					<h2>Subscribe for full access to all our reports.</h2>
+					<p>As a Gigaom Research subscriber, you get access to the full text of all reports in archive. Sign up for Alerts to get email notifications of when new reports are published on topics of interest to you and your business.</p>
+				<?php
+			}
+			else
+			{
+				?>
+					<h2>Register to gain access to <strong>any</strong> single report for <strong>free</strong>.</h2>
+					<p>When you register with Gigaom Research, you gain access to the full text of any report of your choosing. We also make other reports available from time to time available only to registered users. With over 200 independent analysts in our network, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
+				<?php
+			}
+			?>
 		</div>
 	</div>
 
