@@ -72,7 +72,7 @@
 		}
 	}
 
-	.email {
+	.required {
 		label {
 			position: relative;
 
@@ -166,6 +166,40 @@
 
 	.skip-to-login {
 		display: none;
+	}
+
+	#email-domain-alert {
+		display: none;
+	}
+
+	.bumpdown-arrow {
+		left: 232px;
+	}
+
+	// slightly better centering of highlighted checkbox
+	label[for=annual-payment-plan],
+	label[for=monthly-payment-plan] {
+		margin-bottom: 0;
+	}
+
+	.go-radio:checked + span:after {
+		left: 0px;
+	}
+
+	.firefox & .go-radio:checked + span:after {
+		left: -1px;
+	}
+
+	.go-radio + span {
+		line-height: 1.28571em;
+	}
+
+	.go-radio-title {
+		color: #adafb1;
+	}
+
+	.readonly {
+		color: #aaaaaa;
 	}
 }
 

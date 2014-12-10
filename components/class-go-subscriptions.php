@@ -2,6 +2,7 @@
 
 class GO_Subscriptions
 {
+	public $id_base = 'go-subscriptions';
 	public $signup_form_id = 'go_subscriptions_signup_form';
 	public $version = '2';
 	public $signin_message_key = 'go-subscriptions-sign-in-message';
@@ -12,8 +13,6 @@ class GO_Subscriptions
 	private $protected_post_types = array(
 		'go-report',
 		'go-report-section',
-		'quarterly-wrap-up', // old report type
-		'sector-roadmap',    // old report type
 	);
 	private $filters = array(
 		'read_post',
@@ -214,6 +213,7 @@ class GO_Subscriptions
 		// setup default values
 		$converted_post_id = 0;
 		$converted_post = get_post();
+
 		if (
 			$converted_post &&
 			! is_page( $converted_post->ID ) &&
@@ -248,12 +248,16 @@ class GO_Subscriptions
 
 		// we may get here for a signed-in user who has no email
 		$user = wp_get_current_user();
+
 		if ( 0 < $user->ID )
 		{
 			$profile_data = apply_filters( 'go_user_profile_get_meta', array(), $user->ID );
 			$default_arr['company'] = isset( $profile_data['company'] ) ? $profile_data['company'] : '';
 			$default_arr['title'] = isset( $profile_data['title'] ) ? $profile_data['title'] : '';
 		}
+
+		$arr['advisory_annual_cost'] = $this->config( 'advisory_annual_cost' );
+		$arr['advisory_monthly_cost'] = $this->config( 'advisory_monthly_cost' );
 
 		// we'll take only non-empty values from $arr. rest will be filled
 		// with values from $dafault_arr
@@ -361,6 +365,24 @@ class GO_Subscriptions
 			return $result;
 		}
 
+		// if subscription request is advisory, we also must validate
+		// the company name
+		if ( ! empty( $result['post_vars']['sub_request'] ) && 'advisory' == $result['post_vars']['sub_request'] )
+		{
+			if ( empty( $result['post_vars']['company'] ) )
+			{
+				$result['error'] = 'Please enter an advisory team name.';
+				return $result;
+			}
+
+			// the advisory name must not already exist (as a go-enterprise)
+			if ( $enterprise_post = get_page_by_path( sanitize_title( $result['post_vars']['company'] ), 'OBJECT', 'go-enterprise' ) )
+			{
+				$result['error'] = 'An existing team has that name ("' . $result['post_vars']['company'] . '"). Please enter a unique team name to differentiate your team.';
+				return $result;
+			}
+		}//END if
+
 		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
 
 		if ( preg_match( '#wiframe/#', $_SERVER['REQUEST_URI'] ) )
@@ -375,8 +397,8 @@ class GO_Subscriptions
 
 		if ( is_wp_error( $return ) )
 		{
-			// we shouldn't be in here since we already checked for the
-			// existence of the email entered in our system, but...
+			// we could be in here if a guest or individual user is upgrading
+			// to an advisory subscription
 			if ( 'email-exists' == $return->get_error_code() )
 			{
 				// we are OK to redirect to the CC capture, the user has an
@@ -385,7 +407,11 @@ class GO_Subscriptions
 
 				// if the user already has an account with an active
 				// subscription, or is an admin, redirect to the sign-in page
-				if ( $result['user']->ID && $result['user']->has_cap( 'subscriber' ) )
+				if (
+					$result['user']->ID &&
+					$result['user']->has_cap( 'subscriber' ) &&
+					empty( $result['post_vars']['sub_request'] )
+				)
 				{
 					$result['error'] = 'Email already linked to a subscription';
 					$result['redirect_url'] = $this->config( 'signin_url' ) . '?action=lostpassword&has_subscription';
@@ -393,11 +419,23 @@ class GO_Subscriptions
 				}//end if
 
 				$result['post_vars']['email'] = $result['user']->user_email;
-				$result['post_vars']['is_subscriber'] = FALSE; // tags the user as a non-subscriber
+				$result['post_vars']['is_subscriber'] = $result['user']->has_cap( 'subscriber' );
+
+				// is this an upgrade to an advisory subscription?
+				if ( ! empty( $result['post_vars']['sub_request'] ) && 'advisory' == $result['post_vars']['sub_request'] )
+				{
+					// fire the go_subscriptions_created_guest_user action
+					// to give go-advisories a chance to create a new advisory post
+					do_action( 'go_subscriptions_created_guest_user', $result['user'], $result['post_vars'] );
+				}
 			}//end if
 			else
 			{
 				$result['redirect_url'] = $this->config( 'signup_path' );
+				if ( ! empty( $result['post_vars']['sub_request'] ) )
+				{
+					$result['redirect_url'] = esc_url_raw( $result['redirect_url'] . $result['post_vars']['sub_request'] . '/' );
+				}
 				$result['error'] = urlencode( $return->get_error_message() );
 			}//end else
 		}//end if
@@ -408,14 +446,34 @@ class GO_Subscriptions
 
 			$result['user'] = get_user_by( 'id', $return );
 
-			if ( empty( $result['post_vars']['redirect_url'] ) )
+			// fire the go_subscriptions_created_guest_user action
+			// to give go-advisories a chance to create a new advisory post
+			do_action( 'go_subscriptions_created_guest_user', $result['user'], $result['post_vars'] );
+
+			// send advisory member who're not subscribers yet to the step-2
+			// CC form
+			if ( current_user_can( 'moderate_advisory_team' ) && ! current_user_can( 'subscriber-advisory' ) )
 			{
-				$result['redirect_url'] = $this->config( 'thankyou_path' );
-			}
+				if ( empty( $result['post_vars']['redirect_url'] ) )
+				{
+					$result['redirect_url'] = $this->config( 'subscription_path' );
+				}
+				else
+				{
+					$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'subscription_path' ) );
+				}
+			}//END if
 			else
 			{
-				$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'thankyou_path' ) );
-			}
+				if ( empty( $result['post_vars']['redirect_url'] ) )
+				{
+					$result['redirect_url'] = $this->config( 'thankyou_path' );
+				}
+				else
+				{
+					$result['redirect_url'] = add_query_arg( 'redirect_url', wp_validate_redirect( $result['post_vars']['redirect_url'] ), $this->config( 'thankyou_path' ) );
+				}
+			}//END else
 		}//end else
 
 		return $result;
@@ -429,7 +487,18 @@ class GO_Subscriptions
 	 */
 	public function subscription_form( $atts )
 	{
-		$form = '<h2>This is not the form you\'re looking for. Seriously!</h2>';
+		// check if we have any shortcode attributes
+		$atts = shortcode_atts( array( 'sub' => '' ), $atts );
+
+		if ( ! isset( $_GET['go-subscriptions'] ) )
+		{
+			$_GET['go-subscriptions'] = array();
+		}
+
+		if ( empty( $_GET['go-subscriptions']['sub_request'] ) )
+		{
+			$_GET['go-subscriptions']['sub_request'] = $atts['sub'];
+		}
 
 		$user = wp_get_current_user();
 
@@ -449,11 +518,90 @@ class GO_Subscriptions
 			{
 				$user = get_user_by( 'email', $_GET['go-subscriptions']['email'] );
 			}
-
-			$form = $this->signup_form( $_GET );
 		}//END if
 
-		return apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
+		$form = $this->signup_form( $_GET ); // step-1 signup form
+		$skip_filter = FALSE;
+
+		// we track user roles on Accounts
+		switch_to_blog( $this->config( 'accounts_blog_id' ) );
+
+		// if this is a request from the corporate purchase page, we may
+		// have to alert the user if the requested subscription plan is at
+		// or below the user's current subscription level
+		// @TODO this whole block can probably be refactored and simplified
+		if ( is_user_logged_in() )
+		{
+			if ( empty( $_GET['go-subscriptions']['sub_request'] ) )
+			{
+				// requested basic free plan but already birdied
+				if ( user_can( $user, 'guest-prospect' ) )
+				{
+					$form = $this->config( 'basic_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+				elseif ( user_can( $user, 'subscriber' ) )
+				{
+					$skip_filter = TRUE;
+
+					if ( user_can( $user, 'subscriber-advisory' ) )
+					{
+						$form = $this->config( 'advisory_plan_redux_message' );
+					}
+					elseif ( user_can( $user, 'subscriber-enterprise' ) )
+					{
+						$form = $this->config( 'corporate_plan_redux_message' );
+					}
+					else
+					{
+						$form = $this->config( 'individual_plan_redux_message' );
+					}
+				}//END elseif
+			}//END if
+			elseif ( 'individual' == $_GET['go-subscriptions']['sub_request'] )
+			{
+				// requested individual plan but already an individual,
+				// advisory, or a corporate subscriber
+				if ( user_can( $user, 'subscriber' ) )
+				{
+					$skip_filter = TRUE;
+					if (
+						! user_can( $user, 'subscriber-advisory' ) &&
+						! user_can( $user, 'subscriber-enterprise' )
+					)
+					{
+						$form = $this->config( 'individual_plan_redux_message' );
+					}
+					elseif ( user_can( $user, 'subscriber-advisory' ) )
+					{
+						$form = $this->config( 'advisory_plan_redux_message' );
+					}
+					elseif ( user_can( $user, 'subscriber-enterprise' ) )
+					{
+						$form = $this->config( 'corporate_plan_redux_message' );
+					}
+				}//END if
+			}//END elseif
+			elseif ( 'advisory' == $_GET['go-subscriptions']['sub_request'] )
+			{
+				// requested advisory plan but already an advisory or
+				// corporate subscriber
+				if ( user_can( $user, 'subscriber-advisory' ) )
+				{
+					$form = $this->config( 'advisory_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+				elseif ( user_can( $user, 'subscriber-enterprise' ) )
+				{
+					$form = $this->config( 'corporate_plan_redux_message' );
+					$skip_filter = TRUE;
+				}
+			}//END elseif
+		}//END if
+
+		restore_current_blog();
+
+		return $skip_filter ? $form : apply_filters( 'go_subscriptions_signup_form', $form, $user->ID, $_GET );
 	}//end subscription_form
 
 	/**
@@ -660,12 +808,6 @@ class GO_Subscriptions
 			unset( $all_caps['comment'] );
 		}
 
-		// no commenting on webinars
-		if ( 'go-webinar' == $post->post_type )
-		{
-			return $all_caps;
-		}
-
 		// if comments are closed for the post, no comment cap for you!
 		if ( ! comments_open( $post->ID ) )
 		{
@@ -750,7 +892,7 @@ class GO_Subscriptions
 			$args['class'] = 'button-' . $args['size'];
 		}
 
-		return $this->get_template_part( 'signup-button.php', $args );
+		return $this->get_template_patr( 'signup-button.php', $args );
 	}//end signup_button
 
 	/**
@@ -771,6 +913,17 @@ class GO_Subscriptions
 		// do shortcode makes sure that any shortcodes that are in the template get parsed.
 		return do_shortcode( $this->get_template_part( 'thanks.php', $atts ) );
 	}//end get_thankyou
+
+	/**
+	 * construct a (form) field name based on our plugin id
+	 *
+	 * @param string $name specific name of the field
+	 * @return the field name based on our $id_base and $name
+	 */
+	private function get_field_name( $name )
+	{
+		return $this->id_base . '[' . $name . ']';
+	}//END get_field_name
 
 	/**
 	 * Get the template part in an output buffer and return it
@@ -1075,7 +1228,7 @@ class GO_Subscriptions
 	/**
 	 * hooked to the site_option_welcome_user_email filter to alter the welcome email
 	 */
-	public function site_option_welcome_user_email( $text )
+	public function site_option_welcome_user_email( $unused_text )
 	{
 		return $this->config( 'welcome_user_email_text' );
 	}//end site_option_welcome_user_email
