@@ -134,15 +134,15 @@ if ( is_user_logged_in() )
 			elseif ( $is_individual_signup )
 			{
 				?>
-					<h2>Subscribe for full access to all our reports.</h2>
-					<p>As a Gigaom Research subscriber, you get access to the full text of all reports in archive. Sign up for Alerts to get email notifications of when new reports are published on topics of interest to you and your business.</p>
+				<h2>Subscribe for full access to all our reports.</h2>
+				<p>As a Gigaom Research subscriber, you get access to the full text of all reports in archive. Sign up for Alerts to get email notifications of when new reports are published on topics of interest to you and your business.</p>
 				<?php
 			}
 			else
 			{
 				?>
-					<h2>Register to gain access to <strong>any</strong> single report for <strong>free</strong>.</h2>
-					<p>When you register with Gigaom Research, you gain access to the full text of any report of your choosing. We also make other reports available from time to time available only to registered users. With over 200 independent analysts in our network, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
+				<h2>Register to gain access to <strong>any</strong> single report for <strong>free</strong>.</h2>
+				<p>When you register with Gigaom Research, you gain access to the full text of any report of your choosing. We also make other reports available from time to time available only to registered users. With over 200 independent analysts in our network, Gigaom Research gives you the in-depth analysis you need to succeed.</p>
 				<?php
 			}
 			?>
