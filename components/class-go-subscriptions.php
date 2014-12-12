@@ -428,7 +428,7 @@ class GO_Subscriptions
 						(
 							'advisory' == $result['post_vars']['sub_request']
 							&&
-							! $result['user']->has_cap( 'signup_advsiory' )
+							! $result['user']->has_cap( 'signup_advisory' )
 						)
 					)
 				)
