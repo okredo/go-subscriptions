@@ -420,7 +420,17 @@ class GO_Subscriptions
 				if (
 					$result['user']->ID &&
 					$result['user']->has_cap( 'subscriber' ) &&
-					empty( $result['post_vars']['sub_request'] )
+					(
+						empty( $result['post_vars']['sub_request'] )
+						||
+						'individual' == $result['post_vars']['sub_request']
+						||
+						(
+							'advisory' == $result['post_vars']['sub_request']
+							&&
+							! $result['user']->has_cap( 'signup_advsiory' )
+						)
+					)
 				)
 				{
 					$result['error'] = 'Email already linked to a subscription';
