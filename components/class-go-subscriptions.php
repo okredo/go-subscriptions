@@ -49,7 +49,9 @@ class GO_Subscriptions
 		}
 		else
 		{
-			//@TODO verify that this is still being used.
+			//@TODO verify that this is still being used. this is not to be
+			// confused with the filter with the same name, fired by
+			// $this->subscription_form()
 			add_shortcode( 'go_subscriptions_signup_form', array( $this, 'signup_form' ) );
 
 			// this is mapped to the "/subscription/sign-up/" permalink
@@ -378,9 +380,17 @@ class GO_Subscriptions
 			// the advisory name must not already exist (as a go-enterprise)
 			if ( $enterprise_post = get_page_by_path( sanitize_title( $result['post_vars']['company'] ), 'OBJECT', 'go-enterprise' ) )
 			{
-				$result['error'] = 'An existing team has that name ("' . $result['post_vars']['company'] . '"). Please enter a unique team name to differentiate your team.';
-				return $result;
-			}
+				// unless the user email is already the advisory owner's
+				if (
+					( ! $enterprise_owner = get_user_by( 'id', $enterprise_post->post_author ) )
+					||
+					$enterprise_owner->user_email != $result['post_vars']['email']
+				)
+				{
+					$result['error'] = 'An existing team has that name ("' . $result['post_vars']['company'] . '"). Please enter a unique team name to differentiate your team.';
+					return $result;
+				}
+			}//END if
 		}//END if
 
 		$return = $this->create_guest_user( $_POST['go-subscriptions'], $this->config( 'default_signup_role' ) );
@@ -410,7 +420,17 @@ class GO_Subscriptions
 				if (
 					$result['user']->ID &&
 					$result['user']->has_cap( 'subscriber' ) &&
-					empty( $result['post_vars']['sub_request'] )
+					(
+						empty( $result['post_vars']['sub_request'] )
+						||
+						'individual' == $result['post_vars']['sub_request']
+						||
+						(
+							'advisory' == $result['post_vars']['sub_request']
+							&&
+							! $result['user']->has_cap( 'signup_advisory' )
+						)
+					)
 				)
 				{
 					$result['error'] = 'Email already linked to a subscription';
