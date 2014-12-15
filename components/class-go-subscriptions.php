@@ -266,7 +266,9 @@ class GO_Subscriptions
 		// override the defaults with _REQUEST if available
 		foreach ( $arr as $k => $v )
 		{
-			$arr[ $k ] = isset( $_REQUEST['go-subscriptions'][ $k ] ) ? $_REQUEST['go-subscriptions'][ $k ] : $v;
+			// strip out any extra slashes PHP helpfully added to any posted
+			// character that need to be escaped
+			$arr[ $k ] = isset( $_REQUEST['go-subscriptions'][ $k ] ) ? stripslashes( $_REQUEST['go-subscriptions'][ $k ] ) : $v;
 		}// end foreach
 
 		// this will let our post handler know if the post came from this form
