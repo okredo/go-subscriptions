@@ -128,14 +128,15 @@ if ( is_user_logged_in() )
 			{
 				?>
 				<h2>Access to Gigaom Research and Analyst Inquiries for your entire team.</h2>
-				<p>When you sign up for a Gigaom Research Advisory plan you get unlimited full text access to Gigaom Research for up to five team members and four Analyst Inquiries for customized, in-depth analysis you need to succeed.</p>
+				<p>When you sign up for a Gigaom Research Advisory plan you get unlimited, full text access to Gigaom Research for up to five team members and four Analyst Inquiries* for customized, in-depth analysis you need to succeed.</p>
+				<p class="small">* Analyst inquiries are regularly $1500/session.</p>
 				<?php
 			}
 			elseif ( $is_individual_signup )
 			{
 				?>
 				<h2>Subscribe for full access to all our reports.</h2>
-				<p>As a Gigaom Research subscriber, you get access to the full text of all reports in archive. Sign up for Alerts to get email notifications of when new reports are published on topics of interest to you and your business.</p>
+				<p>As a Gigaom Research subscriber, you get access to the full text of all reports. Sign up for Alerts to get email notifications of when new reports are published on topics of interest to you and your business.</p>
 				<?php
 			}
 			else
