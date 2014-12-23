@@ -472,27 +472,6 @@ class GO_Subscriptions
 			// to give go-advisories a chance to create a new advisory post
 			do_action( 'go_subscriptions_created_guest_user', $result['user'], $result['post_vars'] );
 
-			// fire the go_subscriptions_created_basic_users_alert action to automatically create alerts for new Basic users
-			// (if so chosen on the signup form)
-
-			// note: we may end up just setting this next var to pass along, and doing the below hook elsewhere
-			// (like in the thank you page...? that's a candidate cos we already know about the chosen birdie report there).
-			// In this case the comment above will be: "make sure the alerts option in the signup form is retained throughout the redirects, until ready for its action hook"
-			// and the line of code will be...
-			//$post_vars['go-subscriptions']['alerts'] = $_REQUEST['go-subscriptions-alerts'];
-			if ( ! empty( $_REQUEST['go-subscriptions-alerts'] ) )
-			{
-				if ( 'on' === $_REQUEST['go-subscriptions-alerts'] )
-				{
-					wlog('fire the action');
-					do_action( 'go_subscriptions_created_basic_users_alert', $result['user'] );
-				}//END if
-				else
-				{
-					wlog( "don't fire the action");
-				}//END else
-			}//END if
-
 			// send advisory member who're not subscribers yet to the step-2
 			// CC form
 			if ( current_user_can( 'moderate_advisory_team' ) && ! current_user_can( 'subscriber-advisory' ) )

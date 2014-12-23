@@ -86,7 +86,7 @@ if ( is_user_logged_in() )
 				</li>
 				<li class="field-container alerts">
 				<label for="go-subscriptions-alerts">
-					<input type="checkbox" class="go-checkbox" name="go-subscriptions-alerts" id="go-subscriptions-alerts" checked>
+					<input id="go-subscriptions-alerts" type="checkbox" class="go-checkbox" name="<?php echo esc_attr( $this->get_field_name( 'alerts' ) ); ?>" checked>
 					<span>Sign me up for alerts</span>
 				</label>
 				</li>
