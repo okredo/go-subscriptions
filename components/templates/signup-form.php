@@ -84,6 +84,12 @@ if ( is_user_logged_in() )
 					<label for="go-subscriptions-company"><?php echo apply_filters( 'go_subscriptions_signup_company_label', 'Company name', $is_advisory_signup ) ?></label>
 					<input id="go-subscriptions-company" type="text" name="<?php echo esc_attr( $this->get_field_name( 'company' ) ); ?>" value="<?php echo isset( $template_variables['company'] ) ? esc_attr( $template_variables['company'] ) : ''; ?>" />
 				</li>
+				<li class="field-container alerts">
+				<label for="go-subscriptions-alerts">
+					<input type="checkbox" class="go-checkbox" name="go-subscriptions-alerts" id="go-subscriptions-alerts" checked>
+					<span>Sign me up for alerts</span>
+				</label>
+				</li>
 				<!-- hidden by CSS for now -->
 				<li class="field-container title">
 					<label for="go-subscriptions-title">Title</label>
